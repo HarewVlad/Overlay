@@ -9,24 +9,18 @@ REM set CommonLinkerFlags=-STACK:0x100000,0x100000 -incremental:no -opt:ref user
 REM x86 or x64
 set Machine=%1
 
-set InjectorCompilerFlags=-Zi
-set OverlayCompilerFlags=-D_WINDLL -D_USRDLL
+set CompileFlags=-nologo
+set InjectorCompilerFlags=-Zi %CompileFlags%
+set OverlayCompilerFlags=-D_WINDLL -D_USRDLL %CompileFlags%
 
-set LinkerFlags=-incremental:no user32.lib gdi32.lib winmm.lib kernel32.lib vendor/libs/%Machine%/detours/detours.lib
-set InjectorLinkerFlags=%LinkerFlags%
-set OverlayLinkerFlags=-dll %LinkerFlags%
+set LinkerFlags=-incremental:no user32.lib gdi32.lib winmm.lib kernel32.lib
+set InjectorLinkerFlags=%LinkerFlags% 
+set OverlayLinkerFlags=-dll %LinkerFlags% vendor/libs/%Machine%/detours/detours.lib
 
 REM Build Injector
-cl %InjectorCompilerFlags% main.cpp /link %InjectorLinkerFlags% -out:injector_%Machine%.exe
+cl %InjectorCompilerFlags% injector/main.cpp /link %InjectorLinkerFlags% -out:injector_%Machine%.exe
 
 REM Build Overlay
-cl %OverlayCompilerFlags% main.cpp /link %OverlayLinkerFlags% -out:overlay_%Machine%.dll
-
-REM 32-bit build
-REM cl %CommonCompilerFlags% ..\handmade\code\win32_handmade.cpp /link -subsystem:windows,5.1 %CommonLinkerFlags%
-
-REM 64-bit build
-REM Optimization switches /wO2
-REM echo WAITING FOR PDB > lock.tmp
+cl %OverlayCompilerFlags% overlay/main.cpp /link %OverlayLinkerFlags% -out:overlay_%Machine%.dll
 
 REM ctime -end handmade_hero.ctm %LastError%

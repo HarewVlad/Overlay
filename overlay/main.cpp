@@ -1,35 +1,29 @@
 #include "main.h"
 
 // Imgui
-#include "vendor/include/imgui/imgui.cpp"
-#include "vendor/include/imgui/imgui_demo.cpp"
-#include "vendor/include/imgui/imgui_draw.cpp"
-#include "vendor/include/imgui/imgui_tables.cpp"
-#include "vendor/include/imgui/imgui_widgets.cpp"
-#include "vendor/include/imgui/imgui_impl_win32.cpp"
-#include "vendor/include/imgui/imgui_impl_dx11.cpp"
+#include "../vendor/include/imgui/imgui.cpp"
+#include "../vendor/include/imgui/imgui_demo.cpp"
+#include "../vendor/include/imgui/imgui_draw.cpp"
+#include "../vendor/include/imgui/imgui_tables.cpp"
+#include "../vendor/include/imgui/imgui_widgets.cpp"
+#include "../vendor/include/imgui/imgui_impl_win32.cpp"
+#include "../vendor/include/imgui/imgui_impl_dx11.cpp"
 
 // Modules
-#include "log.cpp"
-#include "utils.cpp"
+#include "../log.cpp"
+#include "../utils.cpp"
 #include "hook.cpp"
 
-#ifndef _WINDLL
-// Test enviroments
-#include "test/directx11.cpp"
-#endif
+// #ifndef _WINDLL
+// // Test enviroments
+// #include "test/directx11.cpp"
+// #endif
 
 HMODULE Global_Module;
 HANDLE Global_Thread;
 
 void InitializeOverlay() {
-  #ifdef _X86_
-  const char *filename = "overlay_x86.txt";
-  #elif defined _X64_
-  const char *filename = "overlay_x64.txt";
-  #endif
-
-  InitializeLogger(filename);
+  InitializeLogger(Global_OverlayLogFilename);
 }
 
 void ShutdownOverlay() {
@@ -43,18 +37,6 @@ void EjectOverlay() {
   CloseHandle(CreateThread(
     NULL, NULL, reinterpret_cast<LPTHREAD_START_ROUTINE>(ShutdownOverlay), 0, 0,
     0));
-}
-
-int main() {
-  #ifdef _X86_
-  const char *filename = "overlay_injector_x86.txt";
-  #elif defined _X64_
-  const char *filename = "overlay_injector_x64.txt";
-  #endif
-
-  InitializeLogger(filename);
-
-  ShutdownLogger();
 }
 
 #ifdef _WINDLL

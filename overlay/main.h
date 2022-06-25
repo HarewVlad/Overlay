@@ -6,23 +6,24 @@
 #include <tchar.h>
 
 // Imgui
-#include "vendor/include/imgui/imgui.h"
-#include "vendor/include/imgui/imgui_impl_win32.h"
-#include "vendor/include/imgui/imgui_impl_dx11.h"
+#include "../vendor/include/imgui/imgui.h"
+#include "../vendor/include/imgui/imgui_impl_win32.h"
+#include "../vendor/include/imgui/imgui_impl_dx11.h"
 
 // Detours
-#include "vendor/include/detours/detver.h"
-#include "vendor/include/detours/detours.h"
+#include "../vendor/include/detours/detver.h"
+#include "../vendor/include/detours/detours.h"
 
 // Modules
-#include "log.h"
-#include "utils.h"
+#include "../config.h"
+#include "../log.h"
+#include "../utils.h"
 #include "hook.h"
 
-#ifndef _WINDLL
-// Test enviroments
-#include "test/directx11.h"
-#endif
+// #ifndef _WINDLL
+// // Test enviroments
+// #include "test/directx11.h"
+// #endif
 
 #ifdef _WINDLL
   #define EXPORT comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)

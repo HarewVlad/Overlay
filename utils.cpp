@@ -1,7 +1,9 @@
 void *GetFunctionObfuscated(HMODULE module, const char *name,
                             unsigned long long key) {
   int length = strlen(name);
-  char *result = (char *)alloca(length);
+  char *result = (char *)alloca(length + 1);
+  memset(result, 0, length + 1);
+  memcpy(result, name, length);
 
   unsigned int shift = 0;
   for (int i = length - 1; i >= 0; --i) {
