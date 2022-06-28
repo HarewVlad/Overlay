@@ -1,13 +1,14 @@
-Hook *CreateHook(void *original, void *fake) {
+Hook *CreateHook(PVOID *original, PVOID fake) {
   Hook *result = new Hook {};
 
   DetourTransactionBegin();
   DetourUpdateThread(GetCurrentThread());
-  DetourAttach(&original, fake);
+  DetourAttach(original, fake);
   LONG error = DetourTransactionCommit();
   if (error != NO_ERROR) {
-    std::cout << "Create Hook error: " << error;
-    assert(0);
+    Log("ERROR", "<DetourTransactionCommit> failed, error = %d", error);
+    delete result;
+    return nullptr;
   }  
 
   result->m_original = original;
@@ -19,10 +20,10 @@ Hook *CreateHook(void *original, void *fake) {
 void RemoveHook(Hook *hook) {
   DetourTransactionBegin();
   DetourUpdateThread(GetCurrentThread());
-  DetourDetach(&hook->m_original, hook->m_fake);
+  DetourDetach(hook->m_original, hook->m_fake);
   LONG error = DetourTransactionCommit();
   if (error != NO_ERROR) {
-    std::cout << "Remove hook error: " << error;
-    assert(0);
+    Log("ERROR", "<DetourTransactionCommit> failed, error = %d", error);
+    return;
   }
 }

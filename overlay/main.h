@@ -20,11 +20,11 @@
 #include "../utils.h"
 #include "hook.h"
 #include "dx11.h"
+#include "overlay.h"
 
-// #ifndef _WINDLL
-// // Test enviroments
-// #include "test/directx11.h"
-// #endif
+#ifndef _WINDLL
+#include "test/dx11.h"
+#endif
 
 #ifdef _WINDLL
   #define EXPORT comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)

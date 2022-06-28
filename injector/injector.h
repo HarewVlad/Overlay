@@ -8,4 +8,4 @@ struct Injector {
 };
 
 Injector *CreateInjector();
-void Inject(Injector *injector, DWORD pid);
+bool Inject(Injector *injector, DWORD pid);

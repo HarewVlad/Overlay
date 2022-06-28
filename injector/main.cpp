@@ -23,13 +23,19 @@ int main(int argc, char **argv) {
   // NOTE(Vlad): For now assume that if no args, than it is in test mode
   if (argc < 2) {
     Log("INFO", "Test injection ...");
-    TestInjection();
-    Log("INFO", "Test injection done!");
+    if (!TestInjection()) Log("ERROR", "Test injection failed!");
+    // TODO: Add more tests later
+
+    Log("INFO", "Tests done!");
   } else {
     DWORD pid = atoi(argv[1]);
 
+    Log("INFO", "Connecting to : %d", pid);
+
     Injector *injector = CreateInjector();
-    Inject(injector, pid);
+    if (!Inject(injector, pid)) {
+      Log("ERROR", "<Inject> failed");
+    }
   }
 
   ShutdownLogger();

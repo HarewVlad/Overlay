@@ -9,18 +9,17 @@ REM set CommonLinkerFlags=-STACK:0x100000,0x100000 -incremental:no -opt:ref user
 REM x86 or x64
 set Machine=%1
 
-set CompileFlags=-nologo
-set InjectorCompilerFlags=-Zi %CompileFlags%
-set OverlayCompilerFlags=-D_WINDLL -D_USRDLL %CompileFlags%
-
 set LinkerFlags=-incremental:no user32.lib gdi32.lib winmm.lib kernel32.lib
 set InjectorLinkerFlags=%LinkerFlags% 
 set OverlayLinkerFlags=-dll %LinkerFlags% vendor/libs/%Machine%/detours/detours.lib
 
-REM Build Injector
-cl %InjectorCompilerFlags% injector/main.cpp /link %InjectorLinkerFlags% -out:injector_%Machine%.exe
+REM Build injector
+cl -Zi -nologo injector/main.cpp /link %InjectorLinkerFlags% -out:injector_%Machine%.exe
 
-REM Build Overlay
-cl %OverlayCompilerFlags% overlay/main.cpp /link %OverlayLinkerFlags% -out:overlay_%Machine%.dll
+REM Build overlay
+cl -D_WINDLL -D_USRDLL -nologo overlay/main.cpp /link %OverlayLinkerFlags% -out:overlay_%Machine%.dll
+
+REM Build overlay to test
+cl -Zi -nologo overlay/main.cpp /link %LinkerFlags% vendor/libs/%Machine%/detours/detours.lib -out:overlay_%Machine%_gui.exe
 
 REM ctime -end handmade_hero.ctm %LastError%

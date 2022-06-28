@@ -1,1 +1,1 @@
-void TestInjection();
+bool TestInjection();

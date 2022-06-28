@@ -9,8 +9,8 @@
 // #include <d3d11.h>
 // #include <tchar.h>
 
-// #pragma comment(lib, "d3d11.lib")
-// #pragma comment(lib, "dxguid.lib")
+#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "dxguid.lib")
 
 namespace Test {
 namespace DX11 {
@@ -64,12 +64,12 @@ void Initialize() {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
 
-      // if (GetAsyncKeyState('W') & 0x8000) {
-      //   UninitOverlay();
-      // }
-      // else if (GetAsyncKeyState('S') & 0x8000) {
-      //   InitOverlay(GetModuleHandle(NULL));
-      // }
+      if (GetAsyncKeyState('W') & 0x8000) {
+        ShutdownOverlay();
+      }
+      else if (GetAsyncKeyState('S') & 0x8000) {
+        InitializeOverlay(GetModuleHandle(NULL));
+      }
 
       if (msg.message == WM_QUIT)
         done = true;

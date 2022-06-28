@@ -1,5 +1,9 @@
 HRESULT WINAPI PresentHook(IDXGISwapChain *swap_chain, UINT sync_interval,
                            UINT flags) {
+  int a = 10;
+
+  // assert(0);
+  MessageBoxA(NULL, "SIDF", "ASDAS", MB_OK);
   return S_OK;
 }
 
@@ -11,7 +15,7 @@ HRESULT WINAPI ResizeBuffersHook(IDXGISwapChain *swap_chain, UINT buffer_count,
 }
 
 namespace DX11 {
-void Hook(HWND window) {
+bool Hook(HWND window) {
   IDXGISwapChain *swap_chain = nullptr;
   ID3D11Device *device = nullptr;
   ID3D11DeviceContext *context = nullptr;
@@ -36,20 +40,34 @@ void Hook(HWND window) {
           nullptr, D3D_DRIVER_TYPE_NULL, nullptr, 0, &feature_level, 1,
           D3D11_SDK_VERSION, &swap_chain_desc, &swap_chain, &device, nullptr,
           &context))) {
-    Log("ERROR", "D3D11CreateDeviceAndSwapChain failed");
-    assert(0);
+    Log("ERROR", "<create_swap_chain_and_present> failed");
+    return false;
   }
 
-  unsigned long present_address = (*(uintptr_t **)swap_chain)[8];
-  unsigned long resize_buffers_address = (*(uintptr_t **)swap_chain)[13];
+  uintptr_t present_address = (*(uintptr_t **)swap_chain)[8];
+  uintptr_t resize_buffers_address = (*(uintptr_t **)swap_chain)[13];
 
-  Global_Dx11.m_Present = CreateHook(&present_address, PresentHook);
+  Log("INFO", "Present address -> %x", present_address);
+  Log("INFO", "ResizeBuffers address -> %x", resize_buffers_address);
+
+  Global_Dx11.m_Present = CreateHook((PVOID *)&present_address, PresentHook);
+  if (!Global_Dx11.m_Present) {
+    Log("ERROR", "<CreateHook> failed");
+    return false;
+  }
+
   Global_Dx11.m_ResizeBuffers =
-      CreateHook(&resize_buffers_address, ResizeBuffersHook);
+      CreateHook((PVOID *)&resize_buffers_address, ResizeBuffersHook);
+  if (!Global_Dx11.m_ResizeBuffers) {
+    Log("ERROR", "<CreateHook failed");
+    return false;
+  }
 
   context->Release();
   device->Release();
   swap_chain->Release();
+
+  return true;
 }
 
 void Shutdown() {

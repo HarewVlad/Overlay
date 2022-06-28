@@ -44,19 +44,17 @@ HWND FindMainWindow(DWORD pid) {
   return data.m_window;
 }
 
-void Inject(Injector *injector, DWORD pid) {
-  Log("INFO", "Connecting to : %d", pid);
-
+bool Inject(Injector *injector, DWORD pid) {
   HANDLE process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
   if (!process) {
-    Log("ERROR", "Unable to open process for info");
-    assert(0);
+    Log("ERROR", "<OpenProcess> failed, error = %d", GetLastError());
+    return false;
   }
 
   HOOKPROC hook_proc = (HOOKPROC)GetProcAddress(injector->m_library, "GetMessageProc");
   if (!hook_proc) {
-    Log("ERROR", "Unable to get hook proc address");
-    assert(0);
+    Log("ERROR", "<GetProcAddress> failed, error = %d", GetLastError());
+    return false;
   }
 
   HWND main_window = NULL;
@@ -69,10 +67,12 @@ void Inject(Injector *injector, DWORD pid) {
   HHOOK hook =
       injector->m_SetWindowsHookEx(WH_GETMESSAGE, hook_proc, injector->m_library, thread);
   if (!hook) {
-    Log("ERROR", "Unable to create hook, error = %d", GetLastError());
-    assert(0);
+    Log("ERROR", "<m_SetWindowsHookEx> failed, error = %d", GetLastError());
+    return false;
   }
   
   Sleep(500); // NOTE(Vlad): Small sleep helps
   PostThreadMessage(thread, WM_USER + 500, NULL, (LPARAM)hook);
+
+  return true;
 }

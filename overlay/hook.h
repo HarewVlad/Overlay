@@ -1,7 +1,7 @@
 struct Hook {
-  void *m_original;
-  void *m_fake;
+  PVOID *m_original;
+  PVOID m_fake;
 };
 
-Hook *CreateHook(void *original, void *fake);
+Hook *CreateHook(PVOID *original, PVOID fake);
 void RemoveHook(Hook *hook);
