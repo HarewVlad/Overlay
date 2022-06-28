@@ -19,6 +19,7 @@
 #include "../log.h"
 #include "../utils.h"
 #include "hook.h"
+#include "dx11.h"
 
 // #ifndef _WINDLL
 // // Test enviroments

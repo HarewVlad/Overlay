@@ -14,19 +14,23 @@
 #include "../utils.cpp"
 #include "injector.cpp"
 
+// Test
+#include "test/test.cpp"
+
 int main(int argc, char **argv) {
   InitializeLogger(Global_InjectorLogFilename);
 
+  // NOTE(Vlad): For now assume that if no args, than it is in test mode
   if (argc < 2) {
-    Log("INFO", "Usage: <pid>"); // TODO: Fix stupid logger =)
-    ShutdownLogger();
-    return 1;
+    Log("INFO", "Test injection ...");
+    TestInjection();
+    Log("INFO", "Test injection done!");
+  } else {
+    DWORD pid = atoi(argv[1]);
+
+    Injector *injector = CreateInjector();
+    Inject(injector, pid);
   }
-
-  DWORD pid = atoi(argv[1]);
-
-  Injector *injector = CreateInjector();
-  Inject(injector, pid);
 
   ShutdownLogger();
 }

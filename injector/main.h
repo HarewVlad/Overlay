@@ -15,3 +15,6 @@
 #include "../log.h"
 #include "../utils.h"
 #include "injector.h"
+
+// Test
+#include "test/test.h"

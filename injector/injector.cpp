@@ -1,13 +1,13 @@
 Injector *CreateInjector() {
-  Injector *result = new Injector;
+  Injector *result = new Injector {};
 
   HMODULE user32 = GetModuleHandle("user32.dll");
   HMODULE kernel32 = GetModuleHandle("kernel32.dll");
 
-  result->m_LoadLibraryExA = (Injector::tLoadLibraryExA)GetFunctionObfuscated(
+  result->m_LoadLibraryExA = (Injector::LoadLibraryExA)GetFunctionObfuscated(
       kernel32, "fHDObGK^LW^eQj", 0x87A678ABFB5CDB56ULL);
 
-  result->m_SetWindowsHookEx = (Injector::tSetWindowsHookEx)GetFunctionObfuscated(
+  result->m_SetWindowsHookEx = (Injector::SetWindowsHookEx)GetFunctionObfuscated(
       user32, "qG[zJCAL\\[`KFBlVe", 0x3DE7834312F54712ULL);
 
   result->m_library = (HINSTANCE)result->m_LoadLibraryExA(Global_OverlayName, NULL,
@@ -61,7 +61,7 @@ void Inject(Injector *injector, DWORD pid) {
 
   HWND main_window = NULL;
   while ((main_window = FindMainWindow(pid)) == NULL) {
-    Sleep(1);
+    Sleep(10);
   }
 
   DWORD thread = GetWindowThreadProcessId(main_window, NULL);
@@ -73,6 +73,6 @@ void Inject(Injector *injector, DWORD pid) {
     assert(0);
   }
   
-  Sleep(100); // NOTE(Vlad): Small sleep helps
+  Sleep(500); // NOTE(Vlad): Small sleep helps
   PostThreadMessage(thread, WM_USER + 500, NULL, (LPARAM)hook);
 }

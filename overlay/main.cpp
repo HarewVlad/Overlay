@@ -13,17 +13,52 @@
 #include "../log.cpp"
 #include "../utils.cpp"
 #include "hook.cpp"
+#include "dx11.cpp"
 
 // #ifndef _WINDLL
 // // Test enviroments
 // #include "test/directx11.cpp"
 // #endif
 
-HMODULE Global_Module;
+HINSTANCE Global_Module;
 HANDLE Global_Thread;
 
-void InitializeOverlay() {
+void InitializeOverlay(HINSTANCE instance) {
   InitializeLogger(Global_OverlayLogFilename);
+
+  // Temp window
+  const char *window_class_name = "temp_window_1935862";
+
+  WNDCLASS wc = {};
+  wc.style = CS_OWNDC;
+  wc.lpfnWndProc = DefWindowProc;
+  wc.hInstance = instance;
+  wc.lpszClassName = window_class_name;
+
+  if (!RegisterClass(&wc)) {
+    Log("ERROR", "Unable to register class for temp window, error = %d", GetLastError());
+    assert(0);
+  }
+
+  HWND temp_window =
+      CreateWindowExA(0, window_class_name, window_class_name,
+                     WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1,
+                     NULL, NULL, instance, NULL);
+
+  if (!temp_window) {
+    Log("ERROR", "Unable to create temp window, error = %d", GetLastError());
+    assert(0);
+  }
+
+  // Detour graphic functions
+  HMODULE dx11 = GetModuleHandle("d3d11.dll");
+  if (dx11) {
+    Log("INFO", "Found Directx11, hooking ...");
+
+    DX11::Hook(temp_window);
+  }
+
+  MessageBoxA(NULL, "Injected!", "Injected", MB_OK);
 }
 
 void ShutdownOverlay() {

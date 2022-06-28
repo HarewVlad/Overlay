@@ -13,7 +13,7 @@
 // #pragma comment(lib, "dxguid.lib")
 
 namespace Test {
-namespace Directx11 {
+namespace DX11 {
 bool CreateDeviceD3D(HWND hWnd);
 void CleanupDeviceD3D();
 void CreateRenderTarget();

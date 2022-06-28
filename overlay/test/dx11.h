@@ -1,5 +1,5 @@
 namespace Test {
-namespace Directx11 {
+namespace DX11 {
 ID3D11Device *Global_Device;
 ID3D11DeviceContext *Global_DeviceContext;
 IDXGISwapChain *Global_SwapChain;

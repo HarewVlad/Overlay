@@ -1,5 +1,5 @@
 Hook *CreateHook(void *original, void *fake) {
-  Hook *result = new Hook;
+  Hook *result = new Hook {};
 
   DetourTransactionBegin();
   DetourUpdateThread(GetCurrentThread());
