@@ -15,6 +15,7 @@
 #include "hook.cpp"
 #include "dx11.cpp"
 #include "overlay.cpp"
+#include "gui.cpp"
 
 #ifndef _WINDLL
 #include "test/dx11.cpp"

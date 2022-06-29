@@ -3,7 +3,7 @@ Hook *CreateHook(PVOID *original, PVOID fake) {
 
   DetourTransactionBegin();
   DetourUpdateThread(GetCurrentThread());
-  DetourAttach(original, fake);
+  DetourAttach((PVOID *)&original, fake);
   LONG error = DetourTransactionCommit();
   if (error != NO_ERROR) {
     Log("ERROR", "<DetourTransactionCommit> failed, error = %d", error);
@@ -20,7 +20,7 @@ Hook *CreateHook(PVOID *original, PVOID fake) {
 void RemoveHook(Hook *hook) {
   DetourTransactionBegin();
   DetourUpdateThread(GetCurrentThread());
-  DetourDetach(hook->m_original, hook->m_fake);
+  DetourDetach((PVOID *)&hook->m_original, hook->m_fake);
   LONG error = DetourTransactionCommit();
   if (error != NO_ERROR) {
     Log("ERROR", "<DetourTransactionCommit> failed, error = %d", error);

@@ -32,8 +32,8 @@ void InitializeOverlay(HINSTANCE instance) {
   if (dx11) {
     Log("INFO", "Found Directx11, hooking ...");
 
-    if (!DX11::Hook(temp_window)) {
-      Log("INFO", "<DX11::Hook> failed");
+    if (!Dx11Hook(temp_window)) {
+      Log("INFO", "<Dx11Hook> failed");
       ShutdownOverlay();
       return;
     }
@@ -46,7 +46,7 @@ void ShutdownOverlay() {
   ShutdownLogger();
 
   // Disable graphics hooks
-  // DX11::Shutdown();
+  // Dx11Shutdown();
 
   // WaitForSingleObject(Global_Thread, INFINITE);
   // FreeLibraryAndExitThread(Global_Module, 0);

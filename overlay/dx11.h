@@ -22,7 +22,5 @@ struct Dx11 {
 
 Dx11 Global_Dx11;
 
-namespace DX11 {
-  bool Hook(HWND window);
-  void Shutdown();
-}
+bool Dx11Hook(HWND window);
+void Dx11Shutdown();

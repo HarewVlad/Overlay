@@ -21,6 +21,7 @@
 #include "hook.h"
 #include "dx11.h"
 #include "overlay.h"
+#include "gui.h"
 
 #ifndef _WINDLL
 #include "test/dx11.h"

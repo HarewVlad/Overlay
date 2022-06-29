@@ -1,21 +1,55 @@
 HRESULT WINAPI PresentHook(IDXGISwapChain *swap_chain, UINT sync_interval,
                            UINT flags) {
-  int a = 10;
+  auto present = (Dx11::Present)Global_Dx11.m_Present->m_original;
 
-  // assert(0);
-  MessageBoxA(NULL, "SIDF", "ASDAS", MB_OK);
-  return S_OK;
+  static bool is_gui_initialized = false;
+  if (!is_gui_initialized) {
+    DXGI_SWAP_CHAIN_DESC swap_chain_desc;
+    swap_chain->GetDesc(&swap_chain_desc);
+
+    ID3D11Device *device = nullptr;
+    swap_chain->GetDevice(IID_PPV_ARGS(&device));
+
+    ID3D11Texture2D *back_buffer = nullptr;
+    swap_chain->GetBuffer(0, IID_PPV_ARGS(&back_buffer));
+
+    ID3D11RenderTargetView *rtv = nullptr;
+    device->CreateRenderTargetView(back_buffer, NULL, &rtv);
+    back_buffer->Release();
+
+    ID3D11DeviceContext *device_context = nullptr;
+    device->GetImmediateContext(&device_context);
+
+    ImGuiInitializeWin32(swap_chain_desc.OutputWindow);
+    ImGuiInitializeDx11(device, device_context);
+
+    is_gui_initialized = true;
+  }
+
+  ImGuiBeginDx11();
+
+  ImGuiDraw();
+
+  ImGuiEndDx11();
+
+  HRESULT result = present(swap_chain, sync_interval, flags);
+
+  return result;
 }
 
 HRESULT WINAPI ResizeBuffersHook(IDXGISwapChain *swap_chain, UINT buffer_count,
                                  UINT width, UINT height,
                                  DXGI_FORMAT new_format,
                                  UINT swap_chain_flags) {
-  return S_OK;
+
+  auto resize_buffers = (Dx11::ResizeBuffers)Global_Dx11.m_ResizeBuffers->m_original;
+
+  HRESULT result = resize_buffers(swap_chain, buffer_count, width, height, new_format, swap_chain_flags);
+
+  return result;
 }
 
-namespace DX11 {
-bool Hook(HWND window) {
+bool Dx11Hook(HWND window) {
   IDXGISwapChain *swap_chain = nullptr;
   ID3D11Device *device = nullptr;
   ID3D11DeviceContext *context = nullptr;
@@ -50,14 +84,14 @@ bool Hook(HWND window) {
   Log("INFO", "Present address -> %x", present_address);
   Log("INFO", "ResizeBuffers address -> %x", resize_buffers_address);
 
-  Global_Dx11.m_Present = CreateHook((PVOID *)&present_address, PresentHook);
+  Global_Dx11.m_Present = CreateHook((PVOID *)present_address, PresentHook);
   if (!Global_Dx11.m_Present) {
     Log("ERROR", "<CreateHook> failed");
     return false;
   }
 
   Global_Dx11.m_ResizeBuffers =
-      CreateHook((PVOID *)&resize_buffers_address, ResizeBuffersHook);
+      CreateHook((PVOID *)resize_buffers_address, ResizeBuffersHook);
   if (!Global_Dx11.m_ResizeBuffers) {
     Log("ERROR", "<CreateHook failed");
     return false;
@@ -70,12 +104,10 @@ bool Hook(HWND window) {
   return true;
 }
 
-void Shutdown() {
+void Dx11Shutdown() {
   if (Global_Dx11.m_Present) RemoveHook(Global_Dx11.m_Present);
   if (Global_Dx11.m_ResizeBuffers) RemoveHook(Global_Dx11.m_ResizeBuffers);
 
   if (Global_Dx11.m_device) Global_Dx11.m_device->Release();
   if (Global_Dx11.m_rtv) Global_Dx11.m_rtv->Release();
 }
-
-} // namespace Dx11

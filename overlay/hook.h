@@ -3,5 +3,5 @@ struct Hook {
   PVOID m_fake;
 };
 
-Hook *CreateHook(PVOID *original, PVOID fake);
+Hook *CreateHook(PVOID *original, PVOID *fake);
 void RemoveHook(Hook *hook);
