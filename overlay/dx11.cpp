@@ -12,8 +12,12 @@ HRESULT WINAPI PresentHook(IDXGISwapChain *swap_chain, UINT sync_interval,
                            UINT flags) {
   auto present = (Dx11::Present)Global_Dx11.m_Present->m_original;
 
-  static bool is_gui_initialized = false;
-  if (!is_gui_initialized) {
+  // TODO: Hook other swap chain methods to detect reset
+  if (Global_ShouldClose) {
+    return present(swap_chain, sync_interval, flags);
+  }
+
+  if (!Global_IsInitialized) {
     DXGI_SWAP_CHAIN_DESC swap_chain_desc;
     swap_chain->GetDesc(&swap_chain_desc);
 
@@ -22,18 +26,29 @@ HRESULT WINAPI PresentHook(IDXGISwapChain *swap_chain, UINT sync_interval,
     Global_Dx11.m_rtv = CreateRTV(swap_chain, Global_Dx11.m_device);
     Global_Dx11.m_device->GetImmediateContext(&Global_Dx11.m_device_context);
 
+    // NOTE(Vlad): Initialize window input hook first
+    if (!WindowHook(swap_chain_desc.OutputWindow)) {
+      Log(Log_Error, "<WindowHook> failed");
+
+      Global_ShouldClose = true;
+
+      return present(swap_chain, sync_interval, flags);
+    }
+
     ImGuiInitializeWin32(swap_chain_desc.OutputWindow);
     ImGuiInitializeDx11(Global_Dx11.m_device, Global_Dx11.m_device_context);
 
-    is_gui_initialized = true;
+    Global_IsInitialized = true;
   }
 
-  ImGuiBeginDx11();
+  if (Global_IsInitialized) {
+    ImGuiBeginDx11();
 
-  ImGuiDraw();
+    ImGuiDraw();
 
-  Global_Dx11.m_device_context->OMSetRenderTargets(1, &Global_Dx11.m_rtv, NULL);
-  ImGuiEndDx11();
+    Global_Dx11.m_device_context->OMSetRenderTargets(1, &Global_Dx11.m_rtv, NULL);
+    ImGuiEndDx11();
+  }
 
   HRESULT result = present(swap_chain, sync_interval, flags);
 
@@ -51,8 +66,6 @@ HRESULT WINAPI ResizeBuffersHook(IDXGISwapChain *swap_chain, UINT buffer_count,
     Global_Dx11.m_rtv->Release();
     Global_Dx11.m_rtv = nullptr;
   }
-
-  ImGui_ImplDX11_InvalidateDeviceObjects();
 
   HRESULT result = resize_buffers(swap_chain, buffer_count, width, height, new_format, swap_chain_flags);
 
@@ -86,26 +99,36 @@ bool Dx11Hook(HWND window) {
           nullptr, D3D_DRIVER_TYPE_NULL, nullptr, 0, &feature_level, 1,
           D3D11_SDK_VERSION, &swap_chain_desc, &swap_chain, &device, nullptr,
           &context))) {
-    Log("ERROR", "<create_swap_chain_and_present> failed");
+    Log(Log_Error, "<create_swap_chain_and_present> failed");
     return false;
   }
 
   uintptr_t present_address = (*(uintptr_t **)swap_chain)[8];
   uintptr_t resize_buffers_address = (*(uintptr_t **)swap_chain)[13];
 
-  Log("INFO", "Present address -> %x", present_address);
-  Log("INFO", "ResizeBuffers address -> %x", resize_buffers_address);
+  Log(Log_Info, "Present address -> %x", present_address);
+  Log(Log_Info, "ResizeBuffers address -> %x", resize_buffers_address);
 
   Global_Dx11.m_Present = CreateHook((PVOID *)present_address, PresentHook);
   if (!Global_Dx11.m_Present) {
-    Log("ERROR", "<CreateHook> failed");
+    Log(Log_Error, "<CreateHook> failed");
     return false;
   }
 
   Global_Dx11.m_ResizeBuffers =
       CreateHook((PVOID *)resize_buffers_address, ResizeBuffersHook);
   if (!Global_Dx11.m_ResizeBuffers) {
-    Log("ERROR", "<CreateHook failed");
+    Log(Log_Error, "<CreateHook failed");
+    return false;
+  }
+
+  if (!EnableHook(Global_Dx11.m_Present)) {
+    Log(Log_Error, "<EnableHook> failed");
+    return false;
+  }
+
+  if (!EnableHook(Global_Dx11.m_ResizeBuffers)) {
+    Log(Log_Error, "<EnableHook> failed");
     return false;
   }
 

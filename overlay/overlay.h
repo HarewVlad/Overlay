@@ -1,6 +1,7 @@
 HINSTANCE Global_Module;
 HANDLE Global_Thread;
 
-void InitializeOverlay(HINSTANCE instance);
+void StartOverlay(HINSTANCE instance);
+bool InitializeOverlay(HINSTANCE instance);
 void ShutdownOverlay();
 void EjectOverlay();

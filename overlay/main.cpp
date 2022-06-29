@@ -16,6 +16,8 @@
 #include "dx11.cpp"
 #include "overlay.cpp"
 #include "gui.cpp"
+#include "window_proc_hook.cpp"
+#include "window.cpp"
 
 #ifndef _WINDLL
 #include "test/dx11.cpp"
@@ -32,7 +34,7 @@
         Global_Module = LoadLibraryW(filename);
 
         Global_Thread = CreateThread(
-            NULL, NULL, reinterpret_cast<LPTHREAD_START_ROUTINE>(InitializeOverlay), (LPVOID)instance,
+            NULL, NULL, reinterpret_cast<LPTHREAD_START_ROUTINE>(StartOverlay), (LPVOID)instance,
             0, 0);
 
         break;
@@ -41,7 +43,7 @@
       case DLL_THREAD_DETACH:
         break;
       case DLL_PROCESS_DETACH:
-        Log("INFO", "Exiting ...");
+        Log(Log_Info, "Exiting ...");
         break;
     }
     return TRUE;

@@ -47,13 +47,13 @@ HWND FindMainWindow(DWORD pid) {
 bool Inject(Injector *injector, DWORD pid) {
   HANDLE process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
   if (!process) {
-    Log("ERROR", "<OpenProcess> failed, error = %d", GetLastError());
+    Log(Log_Error, "<OpenProcess> failed, error = %d", GetLastError());
     return false;
   }
 
   HOOKPROC hook_proc = (HOOKPROC)GetProcAddress(injector->m_library, "GetMessageProc");
   if (!hook_proc) {
-    Log("ERROR", "<GetProcAddress> failed, error = %d", GetLastError());
+    Log(Log_Error, "<GetProcAddress> failed, error = %d", GetLastError());
     return false;
   }
 
@@ -67,7 +67,7 @@ bool Inject(Injector *injector, DWORD pid) {
   HHOOK hook =
       injector->m_SetWindowsHookEx(WH_GETMESSAGE, hook_proc, injector->m_library, thread);
   if (!hook) {
-    Log("ERROR", "<m_SetWindowsHookEx> failed, error = %d", GetLastError());
+    Log(Log_Error, "<m_SetWindowsHookEx> failed, error = %d", GetLastError());
     return false;
   }
   

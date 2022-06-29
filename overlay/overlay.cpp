@@ -1,5 +1,7 @@
-void InitializeOverlay(HINSTANCE instance) {
-  InitializeLogger(Global_OverlayLogFilename);
+bool InitializeOverlay(HINSTANCE instance) {
+  if (!InitializeLogger(Global_OverlayLogFilename)) {
+    return false;
+  }
 
   // Temp window
   const char *window_class_name = "temp_window_1935862";
@@ -11,9 +13,8 @@ void InitializeOverlay(HINSTANCE instance) {
   wc.lpszClassName = window_class_name;
 
   if (!RegisterClass(&wc)) {
-    Log("ERROR", "<RegisterClass> failed, error = %d", GetLastError());
-    ShutdownOverlay();
-    return;
+    Log(Log_Error, "<RegisterClass> failed, error = %d", GetLastError());
+    return false;
   }
 
   HWND temp_window =
@@ -22,34 +23,46 @@ void InitializeOverlay(HINSTANCE instance) {
                      NULL, NULL, instance, NULL);
 
   if (!temp_window) {
-    Log("ERROR", "<CreateWindowExA> failed, error = %d", GetLastError());
-    ShutdownOverlay();
-    return;
+    Log(Log_Error, "<CreateWindowExA> failed, error = %d", GetLastError());
+    return false;
   }
 
   // Detour graphic functions
   HMODULE dx11 = GetModuleHandle("d3d11.dll");
   if (dx11) {
-    Log("INFO", "Found Directx11, hooking ...");
+    Log(Log_Info, "Found Directx11, hooking ...");
 
     if (!Dx11Hook(temp_window)) {
-      Log("INFO", "<Dx11Hook> failed");
-      ShutdownOverlay();
-      return;
+      Log(Log_Info, "<Dx11Hook> failed");
+      return false;
     }
   }
 
-  // MessageBoxA(NULL, "Injected!", "Injected", MB_OK);
+  return true;
+}
+
+void StartOverlay(HINSTANCE instance) {
+  if (!InitializeOverlay(instance)) {
+    Log(Log_Error, "<InitializeOverlay> error");
+    ShutdownOverlay();
+    return;
+  }
+
+  while (!Global_ShouldClose) {
+    Sleep(10);
+  }
+
+  ShutdownOverlay();
 }
 
 void ShutdownOverlay() {
   ShutdownLogger();
 
   // Disable graphics hooks
-  // Dx11Shutdown();
+  Dx11Shutdown();
 
-  // WaitForSingleObject(Global_Thread, INFINITE);
-  // FreeLibraryAndExitThread(Global_Module, 0);
+  WaitForSingleObject(Global_Thread, INFINITE);
+  FreeLibraryAndExitThread(Global_Module, 0);
 }
 
 void EjectOverlay() {

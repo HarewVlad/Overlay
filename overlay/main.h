@@ -22,6 +22,9 @@
 #include "dx11.h"
 #include "overlay.h"
 #include "gui.h"
+#include "window_proc_hook.h"
+#include "window.h"
+#include "state.h"
 
 #ifndef _WINDLL
 #include "test/dx11.h"

@@ -4,4 +4,5 @@ struct Hook {
 };
 
 Hook *CreateHook(PVOID *original, PVOID *fake);
-void RemoveHook(Hook *hook);
+bool EnableHook(Hook *hook);
+bool RemoveHook(Hook *hook);
