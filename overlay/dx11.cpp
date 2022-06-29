@@ -1,3 +1,13 @@
+ID3D11RenderTargetView *CreateRTV(IDXGISwapChain *swap_chain, ID3D11Device *device) {
+  ID3D11RenderTargetView *result = nullptr;
+  ID3D11Texture2D *back_buffer = nullptr;
+  swap_chain->GetBuffer(0, IID_PPV_ARGS(&back_buffer));
+  device->CreateRenderTargetView(back_buffer, NULL, &result);
+
+  back_buffer->Release();
+  return result;
+}
+
 HRESULT WINAPI PresentHook(IDXGISwapChain *swap_chain, UINT sync_interval,
                            UINT flags) {
   auto present = (Dx11::Present)Global_Dx11.m_Present->m_original;
@@ -7,21 +17,13 @@ HRESULT WINAPI PresentHook(IDXGISwapChain *swap_chain, UINT sync_interval,
     DXGI_SWAP_CHAIN_DESC swap_chain_desc;
     swap_chain->GetDesc(&swap_chain_desc);
 
-    ID3D11Device *device = nullptr;
-    swap_chain->GetDevice(IID_PPV_ARGS(&device));
+    swap_chain->GetDevice(IID_PPV_ARGS(&Global_Dx11.m_device));
 
-    ID3D11Texture2D *back_buffer = nullptr;
-    swap_chain->GetBuffer(0, IID_PPV_ARGS(&back_buffer));
-
-    ID3D11RenderTargetView *rtv = nullptr;
-    device->CreateRenderTargetView(back_buffer, NULL, &rtv);
-    back_buffer->Release();
-
-    ID3D11DeviceContext *device_context = nullptr;
-    device->GetImmediateContext(&device_context);
+    Global_Dx11.m_rtv = CreateRTV(swap_chain, Global_Dx11.m_device);
+    Global_Dx11.m_device->GetImmediateContext(&Global_Dx11.m_device_context);
 
     ImGuiInitializeWin32(swap_chain_desc.OutputWindow);
-    ImGuiInitializeDx11(device, device_context);
+    ImGuiInitializeDx11(Global_Dx11.m_device, Global_Dx11.m_device_context);
 
     is_gui_initialized = true;
   }
@@ -30,6 +32,7 @@ HRESULT WINAPI PresentHook(IDXGISwapChain *swap_chain, UINT sync_interval,
 
   ImGuiDraw();
 
+  Global_Dx11.m_device_context->OMSetRenderTargets(1, &Global_Dx11.m_rtv, NULL);
   ImGuiEndDx11();
 
   HRESULT result = present(swap_chain, sync_interval, flags);
@@ -44,7 +47,16 @@ HRESULT WINAPI ResizeBuffersHook(IDXGISwapChain *swap_chain, UINT buffer_count,
 
   auto resize_buffers = (Dx11::ResizeBuffers)Global_Dx11.m_ResizeBuffers->m_original;
 
+  if (Global_Dx11.m_rtv) {
+    Global_Dx11.m_rtv->Release();
+    Global_Dx11.m_rtv = nullptr;
+  }
+
+  ImGui_ImplDX11_InvalidateDeviceObjects();
+
   HRESULT result = resize_buffers(swap_chain, buffer_count, width, height, new_format, swap_chain_flags);
+
+  Global_Dx11.m_rtv = CreateRTV(swap_chain, Global_Dx11.m_device);
 
   return result;
 }
