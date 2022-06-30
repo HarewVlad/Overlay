@@ -18,7 +18,9 @@
 #include "test/test.cpp"
 
 int main(int argc, char **argv) {
-  InitializeLogger(Global_InjectorLogFilename);
+  if (!InitializeLogger(Global_InjectorLogFilename)) {
+    return 1;
+  }
 
   // NOTE(Vlad): For now assume that if no args, than it is in test mode
   if (argc < 2) {

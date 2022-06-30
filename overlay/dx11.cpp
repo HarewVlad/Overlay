@@ -1,11 +1,72 @@
 ID3D11RenderTargetView *CreateRTV(IDXGISwapChain *swap_chain, ID3D11Device *device) {
   ID3D11RenderTargetView *result = nullptr;
   ID3D11Texture2D *back_buffer = nullptr;
-  swap_chain->GetBuffer(0, IID_PPV_ARGS(&back_buffer));
-  device->CreateRenderTargetView(back_buffer, NULL, &result);
+  swap_chain->GetBuffer(0, IID_PPV_ARGS(&back_buffer)); // TODO: Add error capturing
+  device->CreateRenderTargetView(back_buffer, NULL, &result); // TODO: Add error capturing
 
   back_buffer->Release();
   return result;
+}
+
+struct TextureInfo {
+  unsigned int m_width;
+  unsigned int m_height;
+  DXGI_FORMAT m_format;
+  bool m_multisampled;
+};
+
+bool GetTextureInfo(IDXGISwapChain *swap_chain, TextureInfo *texture_info) {
+  DXGI_SWAP_CHAIN_DESC swap_chain_desc;
+  HRESULT result = swap_chain->GetDesc(&swap_chain_desc);
+  if (FAILED(result)) {
+    Log(Log_Error, "<GetDesc> failed, error = %d", result);
+    return false;
+  }
+
+  texture_info->m_format = swap_chain_desc.BufferDesc.Format;
+  texture_info->m_multisampled = swap_chain_desc.SampleDesc.Count > 1;
+  texture_info->m_width = swap_chain_desc.BufferDesc.Width;
+  texture_info->m_height = swap_chain_desc.BufferDesc.Height;
+
+  return true;
+}
+
+ID3D11Texture2D *CreateSharedTexture(ID3D11Device *device, TextureInfo *texture_info) {
+  ID3D11Texture2D *texture = nullptr;
+
+  D3D11_TEXTURE2D_DESC texture_desc = {};
+  texture_desc.Width = texture_info->m_width;
+  texture_desc.Height = texture_info->m_height;
+  texture_desc.Format = texture_info->m_format;
+  texture_desc.MipLevels = 1;
+  texture_desc.ArraySize = 1;
+  texture_desc.SampleDesc.Count = 1;
+  texture_desc.Usage = D3D11_USAGE_STAGING;
+  texture_desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+
+  HRESULT result = device->CreateTexture2D(&texture_desc, nullptr, &texture);
+  if (FAILED(result)) {
+    Log(Log_Error, "<CreateTexture2D> failed, error = %d", result);
+    return nullptr;
+  }
+
+  return texture;
+}
+
+void CaptureFrame(IDXGISwapChain *swap_chain, ID3D11DeviceContext *device_context, TextureInfo *texture_info, ID3D11Texture2D *texture) {
+  ID3D11Texture2D *back_buffer = nullptr;
+  swap_chain->GetBuffer(0, IID_PPV_ARGS(&back_buffer)); // TODO: Add error capturing
+
+  if (!texture_info->m_multisampled) {
+    device_context->CopyResource(texture, back_buffer);
+  } else {
+    device_context->ResolveSubresource(texture, 0, back_buffer, 0, texture_info->m_format);
+  }
+
+  back_buffer->Release();
+
+  // TODO: Save to file?
+  // D3DX11SaveTextureToFile();
 }
 
 HRESULT WINAPI PresentHook(IDXGISwapChain *swap_chain, UINT sync_interval,
@@ -19,7 +80,12 @@ HRESULT WINAPI PresentHook(IDXGISwapChain *swap_chain, UINT sync_interval,
 
   if (!Global_IsInitialized) {
     DXGI_SWAP_CHAIN_DESC swap_chain_desc;
-    swap_chain->GetDesc(&swap_chain_desc);
+    if (FAILED(swap_chain->GetDesc(&swap_chain_desc))) {
+      Log(Log_Error, "<GetDesc> failed");
+
+      Global_ShouldClose = true;
+      return present(swap_chain, sync_interval, flags);
+    }
 
     swap_chain->GetDevice(IID_PPV_ARGS(&Global_Dx11.m_device));
 
@@ -31,9 +97,21 @@ HRESULT WINAPI PresentHook(IDXGISwapChain *swap_chain, UINT sync_interval,
       Log(Log_Error, "<WindowHook> failed");
 
       Global_ShouldClose = true;
-
       return present(swap_chain, sync_interval, flags);
     }
+
+    // NOTE(Vlad): Initialize texture to copy frames
+    TextureInfo texture_info = {};
+    if (!GetTextureInfo(swap_chain, &texture_info)) {
+      Log(Log_Error, "<GetTextureInfo> failed");
+
+      Global_ShouldClose = true;
+      return present(swap_chain, sync_interval, flags); 
+    }
+
+    Global_Dx11.m_texture = CreateSharedTexture(Global_Dx11.m_device, &texture_info);
+
+    CaptureFrame(swap_chain, Global_Dx11.m_device_context, &texture_info, Global_Dx11.m_texture);
 
     ImGuiInitializeWin32(swap_chain_desc.OutputWindow);
     ImGuiInitializeDx11(Global_Dx11.m_device, Global_Dx11.m_device_context);

@@ -16,6 +16,7 @@ struct Dx11 {
   ID3D11RenderTargetView *m_rtv;
   ID3D11Device *m_device;
   ID3D11DeviceContext *m_device_context;
+  ID3D11Texture2D *m_texture;
 
   Hook *m_Present;
   Hook *m_ResizeBuffers;
