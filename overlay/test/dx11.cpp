@@ -34,7 +34,7 @@ void Initialize() {
     CleanupDeviceD3D();
     UnregisterClass(wc.lpszClassName, wc.hInstance);
 
-    Log(Log_Error, "Failed to initialize Directx11");
+    LOG(Log_Error, "Failed to initialize Directx11");
     assert(0);
   }
 

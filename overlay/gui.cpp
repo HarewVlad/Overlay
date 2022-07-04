@@ -43,6 +43,19 @@ void ImGuiDrawOverlay() {
   {
       IMGUI_DEMO_MARKER("Examples/Simple Overlay");
       ImGui::Text("Simple overlay\n" "in the corner of the screen.\n" "(right-click to change position)");
+
+      if (ImGui::Button("Screenshot")) {
+        LOG(Log_Info, "Screenshot requested");
+
+        SetState(State_Screenshot);
+      }
+
+      if (ImGui::Button("Exit")) {
+        LOG(Log_Error, "Exit requested");
+
+        SetState(State_Close);
+      }
+
       ImGui::Separator();
       if (ImGui::IsMousePosValid())
           ImGui::Text("Mouse Position: (%.1f,%.1f)", io.MousePos.x, io.MousePos.y);

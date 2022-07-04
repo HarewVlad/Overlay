@@ -1,4 +1,4 @@
-struct Dx11 {
+struct Dx11Data {
   typedef HRESULT(WINAPI *Present)(IDXGISwapChain *, UINT, UINT);
   typedef HRESULT(WINAPI *ResizeBuffers)(IDXGISwapChain *, UINT, UINT, UINT,
                                           DXGI_FORMAT, UINT);
@@ -16,13 +16,12 @@ struct Dx11 {
   ID3D11RenderTargetView *m_rtv;
   ID3D11Device *m_device;
   ID3D11DeviceContext *m_device_context;
-  ID3D11Texture2D *m_texture;
 
   Hook *m_Present;
   Hook *m_ResizeBuffers;
 };
 
-Dx11 Global_Dx11;
+static Dx11Data Global_Dx11Data;
 
 bool Dx11Hook(HWND window);
 void Dx11Shutdown();

@@ -19,12 +19,13 @@
 #include "../log.h"
 #include "../utils.h"
 #include "hook.h"
-#include "dx11.h"
+#include "dx11_detour.h"
 #include "overlay.h"
 #include "gui.h"
 #include "window_proc_hook.h"
-#include "window.h"
+#include "window_detour.h"
 #include "state.h"
+#include "frame.h"
 
 #ifndef _WINDLL
 #include "test/dx11.h"

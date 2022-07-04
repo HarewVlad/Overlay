@@ -13,7 +13,7 @@ bool InitializeOverlay(HINSTANCE instance) {
   wc.lpszClassName = window_class_name;
 
   if (!RegisterClass(&wc)) {
-    Log(Log_Error, "<RegisterClass> failed, error = %d", GetLastError());
+    LOG(Log_Error, "<RegisterClass> failed, error = %d", GetLastError());
     return false;
   }
 
@@ -23,17 +23,17 @@ bool InitializeOverlay(HINSTANCE instance) {
                      NULL, NULL, instance, NULL);
 
   if (!temp_window) {
-    Log(Log_Error, "<CreateWindowExA> failed, error = %d", GetLastError());
+    LOG(Log_Error, "<CreateWindowExA> failed, error = %d", GetLastError());
     return false;
   }
 
   // Detour graphic functions
   HMODULE dx11 = GetModuleHandle("d3d11.dll");
   if (dx11) {
-    Log(Log_Info, "Found Directx11, hooking ...");
+    LOG(Log_Info, "Found Directx11, hooking ...");
 
     if (!Dx11Hook(temp_window)) {
-      Log(Log_Info, "<Dx11Hook> failed");
+      LOG(Log_Info, "<Dx11Hook> failed");
       return false;
     }
   }
@@ -43,12 +43,12 @@ bool InitializeOverlay(HINSTANCE instance) {
 
 void StartOverlay(HINSTANCE instance) {
   if (!InitializeOverlay(instance)) {
-    Log(Log_Error, "<InitializeOverlay> error");
+    LOG(Log_Error, "<InitializeOverlay> error");
     ShutdownOverlay();
     return;
   }
 
-  while (!Global_ShouldClose) {
+  while (!GetState(State_Close)) {
     Sleep(10);
   }
 
@@ -58,7 +58,7 @@ void StartOverlay(HINSTANCE instance) {
 void ShutdownOverlay() {
   ShutdownLogger();
 
-  // Disable graphics hooks
+  WindowShutdown();
   Dx11Shutdown();
 
   WaitForSingleObject(Global_Thread, INFINITE);

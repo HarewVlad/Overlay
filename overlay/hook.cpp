@@ -13,7 +13,7 @@ bool EnableHook(Hook *hook) {
   DetourAttach((PVOID *)&hook->m_original, hook->m_fake);
   LONG error = DetourTransactionCommit();
   if (error != NO_ERROR) {
-    Log(Log_Error, "<DetourTransactionCommit> failed, error = %d", error);
+    LOG(Log_Error, "<DetourTransactionCommit> failed, error = %d", error);
     return false;
   }
 
@@ -26,7 +26,7 @@ bool RemoveHook(Hook *hook) {
   DetourDetach((PVOID *)&hook->m_original, hook->m_fake);
   LONG error = DetourTransactionCommit();
   if (error != NO_ERROR) {
-    Log(Log_Error, "<DetourTransactionCommit> failed, error = %d", error);
+    LOG(Log_Error, "<DetourTransactionCommit> failed, error = %d", error);
     return false;
   }
 

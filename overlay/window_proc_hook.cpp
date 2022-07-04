@@ -12,7 +12,7 @@ bool EnableWindowProcHook(WindowProcHook *window_proc_hook, HWND window) {
   LONG_PTR result = SetWindowLongPtr(window, GWLP_WNDPROC, (LONG_PTR)window_proc_hook->m_fake);
   DWORD error = GetLastError();
   if (!result && !error) {
-    Log(Log_Error, "<SetWindowLongPtr> failed, error = %d", error);
+    LOG(Log_Error, "<SetWindowLongPtr> failed, error = %d", error);
     return false;
   }
 
@@ -24,7 +24,7 @@ bool RemoveWindowProcHook(WindowProcHook *window_proc_hook, HWND window) {
   LONG_PTR result = SetWindowLongPtr(window, GWLP_WNDPROC, (LONG_PTR)window_proc_hook->m_original);
   DWORD error = GetLastError();
   if (!result && !error) {
-    Log(Log_Error, "<SetWindowLongPtr> failed, error = %d", error);
+    LOG(Log_Error, "<SetWindowLongPtr> failed, error = %d", error);
     return false;
   }
 

@@ -10,14 +10,17 @@
 #include "../vendor/include/imgui/imgui_impl_dx11.cpp"
 
 // Modules
+#include "state.cpp"
 #include "../log.cpp"
 #include "../utils.cpp"
 #include "hook.cpp"
-#include "dx11.cpp"
+#include "frame.cpp"
+#include "dx11_detour.cpp"
 #include "overlay.cpp"
 #include "gui.cpp"
 #include "window_proc_hook.cpp"
-#include "window.cpp"
+#include "window_detour.cpp"
+
 
 #ifndef _WINDLL
 #include "test/dx11.cpp"
@@ -43,7 +46,7 @@
       case DLL_THREAD_DETACH:
         break;
       case DLL_PROCESS_DETACH:
-        Log(Log_Info, "Exiting ...");
+        LOG(Log_Info, "Exiting ...");
         break;
     }
     return TRUE;
@@ -68,4 +71,3 @@ int main() {
   Test::DX11::Initialize();
 }
 #endif
-

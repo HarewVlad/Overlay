@@ -1,5 +1,5 @@
-HINSTANCE Global_Module;
-HANDLE Global_Thread;
+static HINSTANCE Global_Module;
+static HANDLE Global_Thread;
 
 void StartOverlay(HINSTANCE instance);
 bool InitializeOverlay(HINSTANCE instance);
