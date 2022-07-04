@@ -51,7 +51,7 @@ void ImGuiDrawOverlay() {
       }
 
       if (ImGui::Button("Exit")) {
-        LOG(Log_Error, "Exit requested");
+        LOG(Log_Info, "Exit requested");
 
         SetState(State_Close);
       }

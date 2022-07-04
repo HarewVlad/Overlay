@@ -27,6 +27,7 @@ bool WindowHook(HWND window) {
 }
 
 void WindowShutdown() {
+  LOG(Log_Info, "Removing windows hooks ...");
   if (!RemoveWindowProcHook(Global_WindowData.m_WindowProcHook, Global_WindowData.m_window)) {
     LOG(Log_Error, "<RemoveWindowProcHook> failed");
     // NOTE(Vlad): Should not be huge deal for now

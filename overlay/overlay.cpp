@@ -52,15 +52,13 @@ void StartOverlay(HINSTANCE instance) {
     Sleep(10);
   }
 
-  ShutdownOverlay();
+  EjectOverlay();
 }
 
 void ShutdownOverlay() {
-  ShutdownLogger();
-
   WindowShutdown();
   Dx11Shutdown();
-
+  
   WaitForSingleObject(Global_Thread, INFINITE);
   FreeLibraryAndExitThread(Global_Module, 0);
 }

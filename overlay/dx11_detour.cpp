@@ -21,15 +21,9 @@ bool InitializeDx11(IDXGISwapChain *swap_chain) {
   Global_Dx11Data.m_rtv = CreateRTV(swap_chain, Global_Dx11Data.m_device);
   Global_Dx11Data.m_device->GetImmediateContext(&Global_Dx11Data.m_device_context);
 
-  // NOTE(Vlad): Initialize window input hook first
+  // NOTE(Vlad): Initialize window hook first
   if (!WindowHook(swap_chain_desc.OutputWindow)) {
     LOG(Log_Error, "<WindowHook> failed");
-    return false;
-  }
-
-  // NOTE(Vlad): Initialize texture to copy frames
-  if (!InitializeFrame(swap_chain, Global_Dx11Data.m_device)) {
-    LOG(Log_Error, "<InitializeFrame> failed");
     return false;
   }
 
@@ -62,14 +56,18 @@ HRESULT WINAPI PresentHook(IDXGISwapChain *swap_chain, UINT sync_interval,
 
   // NOTE(Vlad): Capture on request
   if (GetState(State_Screenshot)) {
-    if (!CaptureFrame(swap_chain, Global_Dx11Data.m_device_context)) {
+    if (!CaptureFrame(swap_chain, Global_Dx11Data.m_device, Global_Dx11Data.m_device_context)) {
       LOG(Log_Error, "<CaptureFrame> failed");
+    }
+
+    if (!SaveFrame(Global_Dx11Data.m_device_context)) {
+      LOG(Log_Error, "<SaveFrame> failed");
     }
 
     RemoveState(State_Screenshot);
   }
 
-  // NOTE(Vlad): Draw
+  // NOTE(Vlad): Draw overlay
   ImGuiBeginDx11();
 
   ImGuiDraw();
@@ -167,6 +165,8 @@ bool Dx11Hook(HWND window) {
 }
 
 void Dx11Shutdown() {
+  LOG(Log_Info, "Removing dx11 hooks ...");
+
   if (Global_Dx11Data.m_Present) RemoveHook(Global_Dx11Data.m_Present);
   if (Global_Dx11Data.m_ResizeBuffers) RemoveHook(Global_Dx11Data.m_ResizeBuffers);
 

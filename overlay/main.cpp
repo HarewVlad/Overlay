@@ -1,5 +1,17 @@
 #include "main.h"
 
+// DirectXTex
+#include "../vendor/include/directxtex/BC.cpp"
+#include "../vendor/include/directxtex/BC4BC5.cpp"
+#include "../vendor/include/directxtex/BC6HBC7.cpp"
+#include "../vendor/include/directxtex/DirectXTexMipmaps.cpp"
+#include "../vendor/include/directxtex/DirectXTexUtil.cpp"
+#include "../vendor/include/directxtex/DirectXTexImage.cpp"
+#include "../vendor/include/directxtex/DirectXTexConvert.cpp"
+#include "../vendor/include/directxtex/DirectXTexCompress.cpp"
+#include "../vendor/include/directxtex/DirectXTexD3D11.cpp"
+#include "../vendor/include/directxtex/DirectXTexWIC.cpp"
+
 // Imgui
 #include "../vendor/include/imgui/imgui.cpp"
 #include "../vendor/include/imgui/imgui_demo.cpp"
@@ -47,6 +59,8 @@
         break;
       case DLL_PROCESS_DETACH:
         LOG(Log_Info, "Exiting ...");
+
+        ShutdownLogger();
         break;
     }
     return TRUE;

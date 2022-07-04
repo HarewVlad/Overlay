@@ -4,6 +4,15 @@
 #include <fstream>
 #include <d3d11.h>
 #include <tchar.h>
+#include <algorithm>
+
+#undef max
+#undef min
+
+// DirectXTex
+#include "../vendor/include/directxtex/BC.h"
+#include "../vendor/include/directxtex/filters.h"
+#include "../vendor/include/directxtex/DirectXTexP.h"
 
 // Imgui
 #include "../vendor/include/imgui/imgui.h"
