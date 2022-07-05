@@ -4,6 +4,7 @@
 #include <fstream>
 #include <d3d11.h>
 #include <tchar.h>
+#include <intrin.h>
 
 // Imgui
 // #include "vendor/include/imgui/imgui.h"

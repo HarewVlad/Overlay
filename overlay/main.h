@@ -5,6 +5,7 @@
 #include <d3d11.h>
 #include <tchar.h>
 #include <algorithm>
+#include <intrin.h>
 
 #undef max
 #undef min

@@ -16,3 +16,13 @@ void *GetFunctionObfuscated(HMODULE module, const char *name,
 
   return GetProcAddress(module, result);
 }
+
+long long GetClock() {
+  int dummy[4]; // For unused returns
+  volatile int DontSkip; // Volatile to prevent optimizing
+  long long clock; // Time
+  __cpuid(dummy, 0); // Serialize
+  DontSkip = dummy[0]; // Prevent optimizing away cpuid
+  clock = __rdtsc(); // Read time
+  return clock;
+}
