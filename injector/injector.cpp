@@ -1,19 +1,19 @@
-Injector *CreateInjector() {
-  Injector *result = new Injector {};
-
+bool Injector::Initialize() {
   HMODULE user32 = GetModuleHandle("user32.dll");
   HMODULE kernel32 = GetModuleHandle("kernel32.dll");
 
-  result->m_LoadLibraryExA = (Injector::LoadLibraryExA)GetFunctionObfuscated(
+  m_LoadLibraryExA = (Injector::LoadLibraryExA)GetFunctionObfuscated(
       kernel32, "fHDObGK^LW^eQj", 0x87A678ABFB5CDB56ULL);
 
-  result->m_SetWindowsHookEx = (Injector::SetWindowsHookEx)GetFunctionObfuscated(
+  m_SetWindowsHookEx = (Injector::SetWindowsHookEx)GetFunctionObfuscated(
       user32, "qG[zJCAL\\[`KFBlVe", 0x3DE7834312F54712ULL);
 
-  result->m_library = (HINSTANCE)result->m_LoadLibraryExA(Global_OverlayName, NULL,
+  m_library = (HINSTANCE)m_LoadLibraryExA(Global_OverlayName, NULL,
                                           DONT_RESOLVE_DLL_REFERENCES);
 
-  return result;
+  // TODO: Check errors
+
+  return true;
 }
 
 struct EnumWindowsData {
@@ -44,16 +44,16 @@ HWND FindMainWindow(DWORD pid) {
   return data.m_window;
 }
 
-bool Inject(Injector *injector, DWORD pid) {
+bool Injector::Inject(DWORD pid) {
   HANDLE process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
   if (!process) {
-    LOG(Log_Error, "<OpenProcess> failed, error = %d", GetLastError());
+    Log(Log_Error, "<OpenProcess> failed, error = %d", GetLastError());
     return false;
   }
 
-  HOOKPROC hook_proc = (HOOKPROC)GetProcAddress(injector->m_library, "GetMessageProc");
+  HOOKPROC hook_proc = (HOOKPROC)GetProcAddress(m_library, "GetMessageProc");
   if (!hook_proc) {
-    LOG(Log_Error, "<GetProcAddress> failed, error = %d", GetLastError());
+    Log(Log_Error, "<GetProcAddress> failed, error = %d", GetLastError());
     return false;
   }
 
@@ -65,9 +65,9 @@ bool Inject(Injector *injector, DWORD pid) {
   DWORD thread = GetWindowThreadProcessId(main_window, NULL);
 
   HHOOK hook =
-      injector->m_SetWindowsHookEx(WH_GETMESSAGE, hook_proc, injector->m_library, thread);
+      m_SetWindowsHookEx(WH_GETMESSAGE, hook_proc, m_library, thread);
   if (!hook) {
-    LOG(Log_Error, "<m_SetWindowsHookEx> failed, error = %d", GetLastError());
+    Log(Log_Error, "<m_SetWindowsHookEx> failed, error = %d", GetLastError());
     return false;
   }
   

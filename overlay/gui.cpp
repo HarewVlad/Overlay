@@ -7,16 +7,16 @@ void ImGuiInitializeWin32(HWND window) {
   io.IniFilename = NULL;
 }
 
-void ImGuiInitializeDx11(ID3D11Device *device, ID3D11DeviceContext *device_context) {
+void ImGuiInitializeGraphics(ID3D11Device *device, ID3D11DeviceContext *device_context) {
   ImGui_ImplDX11_Init(device, device_context);
 }
 
-void ImGuiBeginDx11() {
+void ImGuiBegin() {
   ImGui_ImplDX11_NewFrame();
   ImGui_ImplWin32_NewFrame();
 }
 
-void ImGuiEndDx11() {
+void ImGuiEnd() {
   ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 }
 
@@ -45,13 +45,23 @@ void ImGuiDrawOverlay() {
       ImGui::Text("Simple overlay\n" "in the corner of the screen.\n" "(right-click to change position)");
 
       if (ImGui::Button("Screenshot")) {
-        LOG(Log_Info, "Screenshot requested");
+        Log(Log_Info, "Screenshot...");
 
         SetState(State_Screenshot);
       }
 
+      if (ImGui::Button("Start recording")) {
+        Log(Log_Info, "Start video recording...");
+
+        // TODO: Recording
+      }
+
+      if (ImGui::Button("Stop recording")) {
+        Log(Log_Info, "Stop video recording...");
+      }
+
       if (ImGui::Button("Exit")) {
-        LOG(Log_Info, "Exit requested");
+        Log(Log_Info, "Exit requested");
 
         SetState(State_Close);
       }

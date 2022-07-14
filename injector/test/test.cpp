@@ -3,14 +3,15 @@ bool TestInjection() {
   PROCESS_INFORMATION pi = {};
 
   if (!CreateProcessA(NULL, "target/main.exe", NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-    LOG(Log_Error, "<CreateProcessA> failed, error = %d", GetLastError());
+    Log(Log_Error, "<CreateProcessA> failed, error = %d", GetLastError());
     return false;
   }
 
-  Injector *injector = CreateInjector();
+  Injector injector;
+  injector.Initialize();
 
-  if (!Inject(injector, pi.dwProcessId)) {
-    LOG(Log_Error, "<Inject> failed");
+  if (!injector.Inject(pi.dwProcessId)) {
+    Log(Log_Error, "<Inject> failed");
     return false;
   }
 

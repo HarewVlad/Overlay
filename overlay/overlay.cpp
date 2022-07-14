@@ -1,4 +1,4 @@
-bool InitializeOverlay(HINSTANCE instance) {
+bool Overlay::Initialize(HINSTANCE instance) {
   if (!InitializeLogger(Global_OverlayLogFilename)) {
     return false;
   }
@@ -13,7 +13,7 @@ bool InitializeOverlay(HINSTANCE instance) {
   wc.lpszClassName = window_class_name;
 
   if (!RegisterClass(&wc)) {
-    LOG(Log_Error, "<RegisterClass> failed, error = %d", GetLastError());
+    Log(Log_Error, "<RegisterClass> failed, error = %d", GetLastError());
     return false;
   }
 
@@ -23,17 +23,16 @@ bool InitializeOverlay(HINSTANCE instance) {
                      NULL, NULL, instance, NULL);
 
   if (!temp_window) {
-    LOG(Log_Error, "<CreateWindowExA> failed, error = %d", GetLastError());
+    Log(Log_Error, "<CreateWindowExA> failed, error = %d", GetLastError());
     return false;
   }
 
   // Detour graphic functions
   HMODULE dx11 = GetModuleHandle("d3d11.dll");
   if (dx11) {
-    LOG(Log_Info, "Found Directx11, hooking ...");
-
-    if (!Dx11Hook(temp_window)) {
-      LOG(Log_Info, "<Dx11Hook> failed");
+    Log(Log_Info, "Found Directx11, hooking ...");
+    if (!m_graphics_manager.HookFunctions(temp_window)) {
+      Log(Log_Info, "Failed to hook graphics functions");
       return false;
     }
   }
@@ -41,30 +40,33 @@ bool InitializeOverlay(HINSTANCE instance) {
   return true;
 }
 
-void StartOverlay(HINSTANCE instance) {
-  if (!InitializeOverlay(instance)) {
-    LOG(Log_Error, "<InitializeOverlay> error");
-    ShutdownOverlay();
-    return;
+void RunOverlay(HINSTANCE instance) {
+  Overlay overlay;
+
+  if (!overlay.Initialize(instance)) {
+    Log(Log_Error, "Failed to initialize overlay");
+  } else {
+    while (!GetState(State_Close)) {
+      Sleep(10);
+    }
   }
 
-  while (!GetState(State_Close)) {
-    Sleep(10);
-  }
+  overlay.Shutdown();
 
   EjectOverlay();
 }
 
-void ShutdownOverlay() {
-  WindowShutdown();
-  Dx11Shutdown();
-  
+void Overlay::Shutdown() {
+  m_graphics_manager.UnhookFunctions();
+}
+
+void Eject() {
   WaitForSingleObject(Global_Thread, INFINITE);
   FreeLibraryAndExitThread(Global_Module, 0);
 }
 
 void EjectOverlay() {
   CloseHandle(CreateThread(
-    NULL, NULL, reinterpret_cast<LPTHREAD_START_ROUTINE>(ShutdownOverlay), 0, 0,
+    NULL, NULL, reinterpret_cast<LPTHREAD_START_ROUTINE>(Eject), 0, 0,
     0));
 }

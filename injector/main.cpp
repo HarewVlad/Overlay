@@ -24,19 +24,24 @@ int main(int argc, char **argv) {
 
   // NOTE(Vlad): For now assume that if no args, than it is in test mode
   if (argc < 2) {
-    LOG(Log_Info, "Test injection ...");
-    if (!TestInjection()) LOG(Log_Error, "Test injection failed!");
+    Log(Log_Info, "Tests...");
+
+    // if (!TestInjection()) Log(Log_Error, "Test injection failed");
+    if (!TestInjection()) Log(Log_Info, "Injection test failed");
+
     // TODO: Add more tests later
 
-    LOG(Log_Info, "Tests done!");
+    Log(Log_Info, "Tests done!");
   } else {
     DWORD pid = atoi(argv[1]);
 
-    LOG(Log_Info, "Connecting to : %d", pid);
+    Log(Log_Info, "Connecting to : %d", pid);
 
-    Injector *injector = CreateInjector();
-    if (!Inject(injector, pid)) {
-      LOG(Log_Error, "<Inject> failed");
+    Injector injector;
+    injector.Initialize();
+
+    if (!injector.Inject(pid)) {
+      Log(Log_Error, "Failed to inject into process");
     }
   }
 

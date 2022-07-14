@@ -25,14 +25,13 @@
 #include "state.cpp"
 #include "../log.cpp"
 #include "../utils.cpp"
+#include "video.cpp"
+#include "window_proc_hook.cpp"
+#include "window_manager.cpp"
 #include "hook.cpp"
-#include "frame.cpp"
-#include "dx11_detour.cpp"
+#include "graphics_manager.cpp"
 #include "overlay.cpp"
 #include "gui.cpp"
-#include "window_proc_hook.cpp"
-#include "window_detour.cpp"
-
 
 #ifndef _WINDLL
 #include "test/dx11.cpp"
@@ -49,7 +48,7 @@
         Global_Module = LoadLibraryW(filename);
 
         Global_Thread = CreateThread(
-            NULL, NULL, reinterpret_cast<LPTHREAD_START_ROUTINE>(StartOverlay), (LPVOID)instance,
+            NULL, NULL, reinterpret_cast<LPTHREAD_START_ROUTINE>(RunOverlay), (LPVOID)instance,
             0, 0);
 
         break;
@@ -58,7 +57,7 @@
       case DLL_THREAD_DETACH:
         break;
       case DLL_PROCESS_DETACH:
-        LOG(Log_Info, "Exiting ...");
+        Log(Log_Info, "Exiting ...");
 
         ShutdownLogger();
         break;

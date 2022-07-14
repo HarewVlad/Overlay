@@ -2,7 +2,7 @@ bool InitializeLogger(const char *filename) {
   Global_Logger = std::ofstream(filename);
 
   if (!Global_Logger) {
-    MessageBoxA(NULL, "Unable to initialize logger", "Error", MB_OK);// NOTE(Vlad): Lol, how to log
+    MessageBoxA(NULL, "Unable to initialize logger", "Error", MB_OK); // NOTE(Vlad): Lol, how to log
                                                 // this if no logger? =)
     return false;
   }
@@ -10,7 +10,7 @@ bool InitializeLogger(const char *filename) {
   return true;
 }
 
-void Log(const char *fmt, ...) {
+void LogInternal(const char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
 

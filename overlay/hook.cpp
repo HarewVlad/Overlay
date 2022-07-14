@@ -1,32 +1,23 @@
-Hook *CreateHook(PVOID *original, PVOID fake) {
-  Hook *result = new Hook {};
-
-  result->m_original = original;
-  result->m_fake = fake;
-
-  return result;
-}
-
-bool EnableHook(Hook *hook) {
+bool Hook::Enable() {
   DetourTransactionBegin();
   DetourUpdateThread(GetCurrentThread());
-  DetourAttach((PVOID *)&hook->m_original, hook->m_fake);
+  DetourAttach((PVOID *)&m_original, m_fake);
   LONG error = DetourTransactionCommit();
   if (error != NO_ERROR) {
-    LOG(Log_Error, "<DetourTransactionCommit> failed, error = %d", error);
+    Log(Log_Error, "<DetourTransactionCommit> failed, error = %d", error);
     return false;
   }
 
   return true;
 }
 
-bool RemoveHook(Hook *hook) {
+bool Hook::Disable() {
   DetourTransactionBegin();
   DetourUpdateThread(GetCurrentThread());
-  DetourDetach((PVOID *)&hook->m_original, hook->m_fake);
+  DetourDetach((PVOID *)&m_original, m_fake);
   LONG error = DetourTransactionCommit();
   if (error != NO_ERROR) {
-    LOG(Log_Error, "<DetourTransactionCommit> failed, error = %d", error);
+    Log(Log_Error, "<DetourTransactionCommit> failed, error = %d", error);
     return false;
   }
 

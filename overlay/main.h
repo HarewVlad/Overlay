@@ -7,6 +7,12 @@
 #include <algorithm>
 #include <intrin.h>
 
+// Video
+#include <mfapi.h>
+#include <mfidl.h>
+#include <Mfreadwrite.h>
+#include <mferror.h>
+
 #undef max
 #undef min
 
@@ -28,14 +34,14 @@
 #include "../config.h"
 #include "../log.h"
 #include "../utils.h"
+#include "window_proc_hook.h"
+#include "window_manager.h"
 #include "hook.h"
-#include "dx11_detour.h"
+#include "graphics_manager.h"
 #include "overlay.h"
 #include "gui.h"
-#include "window_proc_hook.h"
-#include "window_detour.h"
 #include "state.h"
-#include "frame.h"
+#include "video.h"
 
 #ifndef _WINDLL
 #include "test/dx11.h"

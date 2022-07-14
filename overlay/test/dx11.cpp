@@ -34,7 +34,7 @@ void Initialize() {
     CleanupDeviceD3D();
     UnregisterClass(wc.lpszClassName, wc.hInstance);
 
-    LOG(Log_Error, "Failed to initialize Directx11");
+    Log(Log_Error, "Failed to initialize Directx11");
     assert(0);
   }
 
@@ -58,6 +58,8 @@ void Initialize() {
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
   bool done = false;
+
+  Overlay overlay;
   while (!done) {
     MSG msg;
     while (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE)) {
@@ -65,10 +67,10 @@ void Initialize() {
       DispatchMessage(&msg);
 
       if (GetAsyncKeyState('W') & 0x8000) {
-        ShutdownOverlay();
+        SetState(State_Close);
       }
       else if (GetAsyncKeyState('S') & 0x8000) {
-        InitializeOverlay(GetModuleHandle(NULL));
+        overlay.Initialize(GetModuleHandle(NULL));
       }
 
       if (msg.message == WM_QUIT)
@@ -167,10 +169,11 @@ bool CreateDeviceD3D(HWND hWnd) {
   sd.SampleDesc.Count = 1;
   sd.SampleDesc.Quality = 0;
   sd.Windowed = TRUE;
-  sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+  sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
   UINT create_device_flags = 0;
   // create_device_flags |= D3D11_CREATE_DEVICE_DEBUG;
+  create_device_flags |= D3D11_CREATE_DEVICE_VIDEO_SUPPORT;
   D3D_FEATURE_LEVEL feauture_level;
   const D3D_FEATURE_LEVEL feauture_level_array[2] = {
       D3D_FEATURE_LEVEL_11_0,
