@@ -7,28 +7,28 @@
 #include <algorithm>
 #include <intrin.h>
 
-// Video
-#include <mfapi.h>
-#include <mfidl.h>
-#include <Mfreadwrite.h>
-#include <mferror.h>
-
 #undef max
 #undef min
 
+// FFmpeg
+// #include <libavcodec/avcodec.h>
+// #include <libavutil/avconfig.h>
+// #include <libavutil/opt.h>
+// #include <libavutil/imgutils.h>
+
 // DirectXTex
-#include "../vendor/include/directxtex/BC.h"
-#include "../vendor/include/directxtex/filters.h"
-#include "../vendor/include/directxtex/DirectXTexP.h"
+#include <directxtex/BC.h>
+#include <directxtex/filters.h>
+#include <directxtex/DirectXTexP.h>
 
 // Imgui
-#include "../vendor/include/imgui/imgui.h"
-#include "../vendor/include/imgui/imgui_impl_win32.h"
-#include "../vendor/include/imgui/imgui_impl_dx11.h"
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_win32.h>
+#include <imgui/imgui_impl_dx11.h>
 
 // Detours
-#include "../vendor/include/detours/detver.h"
-#include "../vendor/include/detours/detours.h"
+#include <detours/detver.h>
+#include <detours/detours.h>
 
 // Modules
 #include "../config.h"

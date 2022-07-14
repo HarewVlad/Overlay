@@ -1,25 +1,25 @@
 #include "main.h"
 
 // DirectXTex
-#include "../vendor/include/directxtex/BC.cpp"
-#include "../vendor/include/directxtex/BC4BC5.cpp"
-#include "../vendor/include/directxtex/BC6HBC7.cpp"
-#include "../vendor/include/directxtex/DirectXTexMipmaps.cpp"
-#include "../vendor/include/directxtex/DirectXTexUtil.cpp"
-#include "../vendor/include/directxtex/DirectXTexImage.cpp"
-#include "../vendor/include/directxtex/DirectXTexConvert.cpp"
-#include "../vendor/include/directxtex/DirectXTexCompress.cpp"
-#include "../vendor/include/directxtex/DirectXTexD3D11.cpp"
-#include "../vendor/include/directxtex/DirectXTexWIC.cpp"
+#include <directxtex/BC.cpp>
+#include <directxtex/BC4BC5.cpp>
+#include <directxtex/BC6HBC7.cpp>
+#include <directxtex/DirectXTexMipmaps.cpp>
+#include <directxtex/DirectXTexUtil.cpp>
+#include <directxtex/DirectXTexImage.cpp>
+#include <directxtex/DirectXTexConvert.cpp>
+#include <directxtex/DirectXTexCompress.cpp>
+#include <directxtex/DirectXTexD3D11.cpp>
+#include <directxtex/DirectXTexWIC.cpp>
 
 // Imgui
-#include "../vendor/include/imgui/imgui.cpp"
-#include "../vendor/include/imgui/imgui_demo.cpp"
-#include "../vendor/include/imgui/imgui_draw.cpp"
-#include "../vendor/include/imgui/imgui_tables.cpp"
-#include "../vendor/include/imgui/imgui_widgets.cpp"
-#include "../vendor/include/imgui/imgui_impl_win32.cpp"
-#include "../vendor/include/imgui/imgui_impl_dx11.cpp"
+#include <imgui/imgui.cpp>
+#include <imgui/imgui_demo.cpp>
+#include <imgui/imgui_draw.cpp>
+#include <imgui/imgui_tables.cpp>
+#include <imgui/imgui_widgets.cpp>
+#include <imgui/imgui_impl_win32.cpp>
+#include <imgui/imgui_impl_dx11.cpp>
 
 // Modules
 #include "state.cpp"
