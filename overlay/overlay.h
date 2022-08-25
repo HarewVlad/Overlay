@@ -10,4 +10,3 @@ struct Overlay {
 
 void RunOverlay(HINSTANCE instance);
 void EjectOverlay();
-

@@ -53,11 +53,13 @@ void ImGuiDrawOverlay() {
       if (ImGui::Button("Start recording")) {
         Log(Log_Info, "Start video recording...");
 
-        // TODO: Recording
+        SetState(State_StartRecording);
       }
 
-      if (ImGui::Button("Stop recording")) {
-        Log(Log_Info, "Stop video recording...");
+      if (ImGui::Button("End recording")) {
+        Log(Log_Info, "End video recording...");
+
+        SetState(State_EndRecording);
       }
 
       if (ImGui::Button("Exit")) {

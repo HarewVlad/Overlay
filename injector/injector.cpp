@@ -1,4 +1,4 @@
-bool Injector::Initialize() {
+void Injector::Initialize() {
   HMODULE user32 = GetModuleHandle("user32.dll");
   HMODULE kernel32 = GetModuleHandle("kernel32.dll");
 
@@ -10,10 +10,6 @@ bool Injector::Initialize() {
 
   m_library = (HINSTANCE)m_LoadLibraryExA(Global_OverlayName, NULL,
                                           DONT_RESOLVE_DLL_REFERENCES);
-
-  // TODO: Check errors
-
-  return true;
 }
 
 struct EnumWindowsData {

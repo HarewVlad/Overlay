@@ -6,9 +6,9 @@
 #include <tchar.h>
 #include <intrin.h>
 
-#include <libavcodec/avcodec.h>
-#include <libavutil/opt.h>
-#include <libavutil/imgutils.h>
+// #include <libavcodec/avcodec.h>
+// #include <libavutil/opt.h>
+// #include <libavutil/imgutils.h>
 
 // Imgui
 // #include "vendor/include/imgui/imgui.h"
@@ -22,4 +22,4 @@
 #include "injector.h"
 
 // Test
-#include "test/test.h"
+#include "test.h"

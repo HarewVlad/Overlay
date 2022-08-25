@@ -1,17 +1,5 @@
 #include "main.h"
 
-// DirectXTex
-#include <directxtex/BC.cpp>
-#include <directxtex/BC4BC5.cpp>
-#include <directxtex/BC6HBC7.cpp>
-#include <directxtex/DirectXTexMipmaps.cpp>
-#include <directxtex/DirectXTexUtil.cpp>
-#include <directxtex/DirectXTexImage.cpp>
-#include <directxtex/DirectXTexConvert.cpp>
-#include <directxtex/DirectXTexCompress.cpp>
-#include <directxtex/DirectXTexD3D11.cpp>
-#include <directxtex/DirectXTexWIC.cpp>
-
 // Imgui
 #include <imgui/imgui.cpp>
 #include <imgui/imgui_demo.cpp>
@@ -25,8 +13,7 @@
 #include "state.cpp"
 #include "../log.cpp"
 #include "../utils.cpp"
-#include "video.cpp"
-#include "window_proc_hook.cpp"
+#include "video_manager.cpp"
 #include "window_manager.cpp"
 #include "hook.cpp"
 #include "graphics_manager.cpp"
@@ -34,7 +21,7 @@
 #include "gui.cpp"
 
 #ifndef _WINDLL
-#include "test/dx11.cpp"
+  #include "test/dx11.cpp"
 #endif
 
 #ifdef _WINDLL

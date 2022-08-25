@@ -2,7 +2,7 @@ struct Injector {
   typedef HMODULE(WINAPI *LoadLibraryExA)(LPCSTR, HANDLE, DWORD);
   typedef HHOOK(WINAPI *SetWindowsHookEx)(int, HOOKPROC, HINSTANCE, DWORD);
 
-  bool Initialize();
+  void Initialize();
   bool Inject(DWORD pid);
 
   LoadLibraryExA m_LoadLibraryExA;

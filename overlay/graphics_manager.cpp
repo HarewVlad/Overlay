@@ -1,6 +1,6 @@
 GraphicsManager *GraphicsManager::m_instance = nullptr;
 
-bool GraphicsManager::CreateRTV(IDXGISwapChain *swap_chain) {
+bool GraphicsManager::CreateRenderTargetView(IDXGISwapChain *swap_chain) {
   ID3D11Texture2D *back_buffer = nullptr;
   HRESULT success = swap_chain->GetBuffer(0, IID_PPV_ARGS(&back_buffer)); // TODO: Add error capturing
   if (FAILED(success)) {
@@ -27,8 +27,11 @@ bool GraphicsManager::Initialize(IDXGISwapChain *swap_chain) {
     return false;    
   }
 
+  m_width = swap_chain_desc.BufferDesc.Width;
+  m_height = swap_chain_desc.BufferDesc.Height;
+
   swap_chain->GetDevice(IID_PPV_ARGS(&m_device));
-  CreateRTV(swap_chain);
+  CreateRenderTargetView(swap_chain);
   m_device->GetImmediateContext(&m_device_context);
 
   // NOTE(Vlad): Initialize copy texture
@@ -58,7 +61,8 @@ bool GraphicsManager::Initialize(IDXGISwapChain *swap_chain) {
     return false;
   }
 
-  // TODO: Refactor this
+  m_video_manager.Initialize(swap_chain_desc.BufferDesc.Width, swap_chain_desc.BufferDesc.Height);
+
   ImGuiInitializeWin32(swap_chain_desc.OutputWindow);
   ImGuiInitializeGraphics(m_device, m_device_context);
 
@@ -84,39 +88,65 @@ HRESULT WINAPI GraphicsManager::PresentHook(IDXGISwapChain *swap_chain, UINT syn
       Log(Log_Error, "Failed to initialize graphics functions");
 
       SetState(State_Close);
-
       return present(swap_chain, sync_interval, flags);
     }
 
     SetState(State_Initialized);
   }
+
+  if (GetState(State_StartRecording)) {
+    m_video_manager.StartRecording();
+
+    RemoveState(State_StartRecording);
+    SetState(State_Recording);
+  }
+
+  if (GetState(State_EndRecording)) {
+    m_video_manager.StopRecording();
+
+    RemoveState(State_Recording);
+    RemoveState(State_EndRecording);
+  }
   
-  if (GetState(State_Screenshot) || GetState(State_Record)) {
+  if (GetState(State_Screenshot) || GetState(State_Recording)) {
     ID3D11Texture2D *back_buffer = nullptr;
     HRESULT success = swap_chain->GetBuffer(0, IID_PPV_ARGS(&back_buffer));
     if (FAILED(success)) {
       Log(Log_Error, "<GetBuffer> failed, error = %d", success);
     } else {
+      if (!m_multisampled) {
+        m_device_context->CopyResource(m_copy_texture, back_buffer);
+      } else {
+        m_device_context->ResolveSubresource(m_copy_texture, 0, back_buffer, 0, m_format);
+      }
+
+      D3D11_MAPPED_SUBRESOURCE mapped_subresource;
+      HRESULT result = m_device_context->Map(m_copy_texture, 0, D3D11_MAP_READ, 0, &mapped_subresource);
+      if (FAILED(result)) {
+        SetState(State_Close);
+        return present(swap_chain, sync_interval, flags);
+      }
+
       if (GetState(State_Screenshot)) {
-        if (!SaveScreenshot(swap_chain, m_device, m_device_context)) {
-          Log(Log_Error, "Failed to save screenshot");
+        // For now we assume that "comp" is RGBA, can cause issues later
+        if (!stbi_write_png("screenshot.png", m_width, m_height, 4, mapped_subresource.pData, mapped_subresource.RowPitch)) {
+          Log(Log_Error, "<stbi_write_png> failed");
         }
 
         RemoveState(State_Screenshot);
       }
 
-      if (GetState(State_Record)) {
-        // NOTE(Vlad): Capture frame
-        // if (!Global_Dx11Data.m_multisampled) {
-        //   Global_Dx11Data.m_device_context->CopyResource(Global_Dx11Data.m_copy_texture, back_buffer);
-        // } else {
-        //   Global_Dx11Data.m_device_context->ResolveSubresource(Global_Dx11Data.m_copy_texture, 0, back_buffer, 0, Global_Dx11Data.m_format);
-        // }
+      if (GetState(State_Recording)) {
+        if (!m_video_manager.RecordFrame(mapped_subresource.pData, mapped_subresource.RowPitch)) {
+          Log(Log_Error, "<RecordFrame> failed");
+        }
       }
+
+      m_device_context->Unmap(m_copy_texture, 0);
     }
   }
 
-  // NOTE(Vlad): Draw overlay
+  // Draw overlay
   ImGuiBegin();
   ImGuiDraw();
   m_device_context->OMSetRenderTargets(1, &m_rtv, NULL);
@@ -148,7 +178,10 @@ HRESULT WINAPI GraphicsManager::ResizeBuffersHook(IDXGISwapChain *swap_chain, UI
 
   HRESULT result = resize_buffers(swap_chain, buffer_count, width, height, new_format, swap_chain_flags);
 
-  CreateRTV(swap_chain);
+  m_width = width;
+  m_height = height;
+
+  CreateRenderTargetView(swap_chain);
 
   return result;
 }
@@ -209,10 +242,11 @@ bool GraphicsManager::HookFunctions(HWND window) {
   return true;
 }
 
-void GraphicsManager::UnhookFunctions() {
+void GraphicsManager::Shutdown() {
   m_Present.Disable();
   m_ResizeBuffers.Disable();
   m_window_manager.UnhookFunctions();
+  m_video_manager.Shutdown();
   
   if (m_device) m_device->Release();
   if (m_rtv) m_rtv->Release();

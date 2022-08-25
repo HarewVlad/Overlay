@@ -11,15 +11,19 @@
 #undef min
 
 // FFmpeg
-// #include <libavcodec/avcodec.h>
-// #include <libavutil/avconfig.h>
-// #include <libavutil/opt.h>
-// #include <libavutil/imgutils.h>
+extern "C" {
+  #include <libavcodec/avcodec.h>
+  #include <libavformat/avformat.h>
+  #include <libavutil/avutil.h>
+  #include <libavutil/time.h>
+  #include <libavutil/opt.h>
+  #include <libswscale/swscale.h>
+}
 
-// DirectXTex
-#include <directxtex/BC.h>
-#include <directxtex/filters.h>
-#include <directxtex/DirectXTexP.h>
+// stb
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb/stb_image.h>
+#include <stb/stb_image_write.h>
 
 // Imgui
 #include <imgui/imgui.h>
@@ -34,17 +38,16 @@
 #include "../config.h"
 #include "../log.h"
 #include "../utils.h"
-#include "window_proc_hook.h"
 #include "window_manager.h"
 #include "hook.h"
+#include "video_manager.h"
 #include "graphics_manager.h"
 #include "overlay.h"
 #include "gui.h"
 #include "state.h"
-#include "video.h"
 
 #ifndef _WINDLL
-#include "test/dx11.h"
+  #include "test/dx11.h"
 #endif
 
 #ifdef _WINDLL

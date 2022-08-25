@@ -15,7 +15,7 @@
 #include "injector.cpp"
 
 // Test
-#include "test/test.cpp"
+#include "test.cpp"
 
 int main(int argc, char **argv) {
   if (!InitializeLogger(Global_InjectorLogFilename)) {

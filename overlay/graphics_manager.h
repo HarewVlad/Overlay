@@ -17,8 +17,8 @@ struct GraphicsManager {
 
   bool HookFunctions(HWND window);
   bool Initialize(IDXGISwapChain *swap_chain);
-  bool CreateRTV(IDXGISwapChain *swap_chain);
-  void UnhookFunctions();
+  bool CreateRenderTargetView(IDXGISwapChain *swap_chain);
+  void Shutdown();
 
   HRESULT WINAPI PresentHook(IDXGISwapChain *swap_chain, UINT sync_interval,
                            UINT flags);
@@ -29,13 +29,17 @@ struct GraphicsManager {
 
   static GraphicsManager *m_instance;
 
+  WindowManager m_window_manager;
+  VideoManager m_video_manager;
+  Hook m_Present;
+  Hook m_ResizeBuffers;
+
   ID3D11RenderTargetView *m_rtv;
   ID3D11Device *m_device;
   ID3D11DeviceContext *m_device_context;
   ID3D11Texture2D *m_copy_texture;
   DXGI_FORMAT m_format;
+  UINT m_width;
+  UINT m_height;
   bool m_multisampled;
-  Hook m_Present;
-  Hook m_ResizeBuffers;
-  WindowManager m_window_manager;
 };

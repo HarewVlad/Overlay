@@ -9,21 +9,22 @@ LRESULT WINAPI WindowManager::WndProcHook(HWND hwnd, UINT msg, WPARAM wparam, LP
     return TRUE;
   }
 
-  return CallWindowProc(m_WindowProcHook.m_original, hwnd, msg, wparam,
+  return CallWindowProc(m_original, hwnd, msg, wparam,
                         lparam);
 }
 
 bool WindowManager::HookFunctions() {
-  WNDPROC wndproc = (WNDPROC)GetWindowLongPtr(m_window, GWLP_WNDPROC);
-  if (!wndproc) {
+  m_original = (WNDPROC)GetWindowLongPtr(m_window, GWLP_WNDPROC);
+  if (!m_original) {
     Log(Log_Error, "<GetWindowLongPtr> failed, error = %d", GetLastError());
     return false;
   }
 
-  m_WindowProcHook.Initialize(wndproc, WndProcStatic);
-  
-  if (!m_WindowProcHook.Enable(m_window)) {
-    Log(Log_Error, "Failed to enable window proc hook");
+  SetLastError(0);
+  LONG_PTR result = SetWindowLongPtr(m_window, GWLP_WNDPROC, (LONG_PTR)WndProcStatic);
+  DWORD error = GetLastError();
+  if (!result && !error) {
+    Log(Log_Error, "<SetWindowLongPtr> failed, error = %d", error);
     return false;
   }
 
@@ -35,8 +36,11 @@ bool WindowManager::HookFunctions() {
 bool WindowManager::UnhookFunctions() {
   Log(Log_Info, "Removing windows hooks ...");
 
-  if (!m_WindowProcHook.Disable(m_window)) {
-    Log(Log_Error, "Failed to disable window proc hook");
+  SetLastError(0);
+  LONG_PTR result = SetWindowLongPtr(m_window, GWLP_WNDPROC, (LONG_PTR)m_original);
+  DWORD error = GetLastError();
+  if (!result && !error) {
+    Log(Log_Error, "<SetWindowLongPtr> failed, error = %d", error);
     return false;
   }
 

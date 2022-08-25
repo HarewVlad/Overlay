@@ -57,7 +57,7 @@ void RunOverlay(HINSTANCE instance) {
 }
 
 void Overlay::Shutdown() {
-  m_graphics_manager.UnhookFunctions();
+  m_graphics_manager.Shutdown();
 }
 
 void Eject() {

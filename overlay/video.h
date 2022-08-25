@@ -1,1 +1,0 @@
-bool SaveScreenshot(IDXGISwapChain *swap_chain, ID3D11Device *device, ID3D11DeviceContext *device_context);

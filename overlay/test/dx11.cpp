@@ -28,7 +28,7 @@ void Initialize() {
 
   HWND hWnd =
       CreateWindowA(wc.lpszClassName, "Directx11", WS_OVERLAPPEDWINDOW, 100,
-                    100, 1165, 876, NULL, NULL, wc.hInstance, NULL);
+                    100, 1920, 1080, NULL, NULL, wc.hInstance, NULL);
 
   if (!CreateDeviceD3D(hWnd)) {
     CleanupDeviceD3D();

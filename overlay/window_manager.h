@@ -10,5 +10,6 @@ struct WindowManager {
   static WindowManager *m_instance;
 
   HWND m_window;
-  WindowProcHook m_WindowProcHook;
+  WNDPROC m_original;
+  WNDPROC m_fake;
 };
