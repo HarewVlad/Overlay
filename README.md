@@ -1,6 +1,13 @@
 # Overlay  
 So basically focusing on making an injectable overlay, and also frame capturing of some sort, maybe something else ...  
 
-# Support  
-1. Directx11
-2. Win32
+# About  
+1. Support Directx11
+2. x64  
+3. Can capture video (Not fully tested yet!)  
+4. Can make screenshots  
+5. You can eject it whenever you want  
+
+# Build  
+1. vcvars64  
+2. build.bat
