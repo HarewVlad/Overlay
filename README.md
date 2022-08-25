@@ -9,10 +9,10 @@ So basically focusing on making an injectable overlay, and also frame capturing 
 5. You can eject it whenever you want  
 
 # Build
->>vcvars64  
->>build.bat  
+/>vcvars64  
+/>build.bat  
 
 It will produce 3 files: overlay.dll, injector.exe, overlay.exe  
 
 # Debug
->devenv overlay.exe
+/>devenv overlay.exe
