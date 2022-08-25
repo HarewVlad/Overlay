@@ -29,6 +29,8 @@ bool GraphicsManager::Initialize(IDXGISwapChain *swap_chain) {
 
   m_width = swap_chain_desc.BufferDesc.Width;
   m_height = swap_chain_desc.BufferDesc.Height;
+  m_multisampled = swap_chain_desc.SampleDesc.Count > 1;
+  m_format = swap_chain_desc.BufferDesc.Format;
 
   swap_chain->GetDevice(IID_PPV_ARGS(&m_device));
   CreateRenderTargetView(swap_chain);
@@ -50,9 +52,6 @@ bool GraphicsManager::Initialize(IDXGISwapChain *swap_chain) {
     Log(Log_Error, "<CreateTexture2D> failed, error = %d", success);
     return false;
   }
-
-  m_multisampled = swap_chain_desc.SampleDesc.Count > 1;
-  m_format = swap_chain_desc.BufferDesc.Format;
 
   m_window_manager.Initialize(swap_chain_desc.OutputWindow);
 
@@ -121,9 +120,9 @@ HRESULT WINAPI GraphicsManager::PresentHook(IDXGISwapChain *swap_chain, UINT syn
       }
 
       D3D11_MAPPED_SUBRESOURCE mapped_subresource;
-      HRESULT result = m_device_context->Map(m_copy_texture, 0, D3D11_MAP_READ, 0, &mapped_subresource);
-      if (FAILED(result)) {
-        SetState(State_Close);
+      success = m_device_context->Map(m_copy_texture, 0, D3D11_MAP_READ, 0, &mapped_subresource);
+      if (FAILED(success)) {
+        Log(Log_Error, "<Map> failed, error = %d", success);
         return present(swap_chain, sync_interval, flags);
       }
 

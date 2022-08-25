@@ -44,7 +44,7 @@ bool VideoManager::Initialize(int width, int height) {
   m_codec_context->time_base.den = 1;
   m_codec_context->max_b_frames = 2;
   m_codec_context->gop_size = 10;
-  m_codec_context->framerate.num = 120;
+  m_codec_context->framerate.num = 60;
   m_codec_context->framerate.den = 1;
 
   if (stream->codecpar->codec_id == AV_CODEC_ID_H264) {
@@ -109,7 +109,7 @@ bool VideoManager::RecordFrame(void *data, int stride) {
   int source_linesize[1] = {stride};
   sws_scale(m_sws_context, (const uint8_t *const *)&data, source_linesize, 0, m_codec_context->height,
         m_frame->data, m_frame->linesize);
-  m_frame->pts = (1.0 / 120) * 90000 * (m_frame_count++);
+  m_frame->pts = (1.0 / 60) * 90000 * (m_frame_count++);
 
   int result = avcodec_send_frame(m_codec_context, m_frame);
   if (result < 0) {
