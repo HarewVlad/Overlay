@@ -8,6 +8,6 @@ So basically focusing on making an injectable overlay, and also frame capturing 
 4. Can make screenshots  
 5. You can eject it whenever you want  
 
-# Build  
+# Build
 1. vcvars64  
 2. build.bat
