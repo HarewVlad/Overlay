@@ -130,14 +130,12 @@ HRESULT WINAPI GraphicsManager::PresentHook(IDXGISwapChain *swap_chain, UINT syn
         int stride = mapped_subresource.RowPitch;
         unsigned int size = m_swap_chain_desc.BufferDesc.Height * mapped_subresource.RowPitch;
 
-        void *data = malloc(size);
-        memcpy(data, mapped_subresource.pData, size);
+        void *pixels = malloc(size);
+        memcpy(pixels, mapped_subresource.pData, size);
 
-        std::thread([&]() {
-          void *pixels = data;
-
+        std::thread([width, height, pixels, stride]() {
           // For now we assume that "comp" is RGBA, can cause issues later
-          if (!stbi_write_png("screenshot.png", m_swap_chain_desc.BufferDesc.Width, m_swap_chain_desc.BufferDesc.Height, 4, pixels, mapped_subresource.RowPitch)) {
+          if (!stbi_write_png("screenshot.png", width, height, 4, pixels, stride)) {
             Log(Log_Error, "<stbi_write_png> failed");
           }
 
