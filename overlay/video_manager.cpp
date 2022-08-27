@@ -2,18 +2,20 @@ int RoundDown2(int value) {
   return value - value % 2;
 }
 
-bool VideoManager::Initialize(int width, int height) {
-  const char *filename = "video.mp4";
-
+bool VideoManager::Initialize() {
   av_register_all();
   avcodec_register_all();
 
-  m_output_format = av_guess_format(nullptr, filename, nullptr);
+  m_output_format = av_guess_format(nullptr, m_filename, nullptr);
   if (!m_output_format) {
     return false;
   }
 
-  int result = avformat_alloc_output_context2(&m_output_format_context, m_output_format, nullptr, filename);
+  return true;
+}
+
+bool VideoManager::StartRecording(int width, int height) {
+  int result = avformat_alloc_output_context2(&m_output_format_context, m_output_format, nullptr, m_filename);
   if (result) {
     return false;
   }
@@ -62,20 +64,6 @@ bool VideoManager::Initialize(int width, int height) {
     return false;
   }
 
-  if (!(m_output_format->flags & AVFMT_NOFILE)) {
-    result = avio_open(&m_output_format_context->pb, filename, AVIO_FLAG_WRITE);
-    if (result < 0) {
-      return false;
-    }
-  }
-
-  result = avformat_write_header(m_output_format_context, NULL);
-  if (result < 0) {
-    return false;
-  }
-
-  av_dump_format(m_output_format_context, 0, filename, 1);
-
   m_frame = av_frame_alloc();
   if (!m_frame) {
     return false;
@@ -96,10 +84,20 @@ bool VideoManager::Initialize(int width, int height) {
     return false;
   }
 
-  return true;
-}
+  if (!(m_output_format->flags & AVFMT_NOFILE)) {
+    result = avio_open(&m_output_format_context->pb, m_filename, AVIO_FLAG_WRITE);
+    if (result < 0) {
+      return false;
+    }
+  }
 
-bool VideoManager::StartRecording() {
+  result = avformat_write_header(m_output_format_context, NULL);
+  if (result < 0) {
+    return false;
+  }
+
+  av_dump_format(m_output_format_context, 0, m_filename, 1);
+
   m_frame_count = 0;
 
   return true;
@@ -155,6 +153,11 @@ bool VideoManager::StopRecording() {
       return false;
     }
   }
+
+  av_frame_free(&m_frame);
+  avcodec_free_context(&m_codec_context);
+  avformat_free_context(m_output_format_context);
+  sws_freeContext(m_sws_context);
 
   return true;
 }

@@ -33,13 +33,11 @@ struct GraphicsManager {
   VideoManager m_video_manager;
   Hook m_Present;
   Hook m_ResizeBuffers;
-
+  DXGI_SWAP_CHAIN_DESC m_swap_chain_desc;
   ID3D11RenderTargetView *m_rtv;
   ID3D11Device *m_device;
   ID3D11DeviceContext *m_device_context;
   ID3D11Texture2D *m_copy_texture;
   DXGI_FORMAT m_format;
-  UINT m_width;
-  UINT m_height;
   bool m_multisampled;
 };

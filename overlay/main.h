@@ -6,6 +6,8 @@
 #include <tchar.h>
 #include <algorithm>
 #include <intrin.h>
+#include <mutex>
+#include <thread>
 
 #undef max
 #undef min
