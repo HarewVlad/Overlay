@@ -22,7 +22,7 @@ bool VideoManager::StartRecording(DXGI_FORMAT format, int width, int height) {
     return false;
   }
 
-  AVCodec *codec = avcodec_find_encoder(m_output_format->video_codec);
+  const AVCodec *codec = avcodec_find_encoder(m_output_format->video_codec);
   if (!codec) {
     Log(Log_Error, "Failed to find encoder");
     return false;
@@ -123,7 +123,6 @@ bool VideoManager::RecordFrame(void *data, int stride) {
   sws_scale(m_sws_context, (const uint8_t *const *)&data, source_linesize, 0, m_codec_context->height,
         m_frame->data, m_frame->linesize);
   m_frame->pts = (1.0 / Global_VideoFPS) * 90000 * (m_frame_count++);
-  // m_frame->pts = m_frame_count++;
 
   int result = avcodec_send_frame(m_codec_context, m_frame);
   if (result < 0) {
@@ -204,7 +203,9 @@ AVPixelFormat VideoManager::DXGIFormatToAVFormat(DXGI_FORMAT format) {
     case DXGI_FORMAT_R8G8B8A8_UNORM:
       return AV_PIX_FMT_RGBA;
     case DXGI_FORMAT_R10G10B10A2_UNORM:
-      return AV_PIX_FMT_X2RGB10LE;
+      return AV_PIX_FMT_X2BGR10;
+    // case DXGI_FORMAT_R16G16B16A16_FLOAT:
+      // return AV_PIX_FMT_RGBAF16;
     default:
       Log(Log_Error, "Format %d unsupported", format);
       return AV_PIX_FMT_NONE;

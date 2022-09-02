@@ -9,6 +9,6 @@ struct VideoManager {
   AVCodecContext *m_codec_context;
   SwsContext *m_sws_context;
   AVFormatContext *m_output_format_context;
-  AVOutputFormat *m_output_format;
+  const AVOutputFormat *m_output_format;
   int m_frame_count;
 };
