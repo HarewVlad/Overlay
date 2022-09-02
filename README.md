@@ -16,3 +16,6 @@ It will produce 3 files: overlay.dll, injector.exe, overlay.exe
 
 # Debug
 />devenv overlay.exe
+
+# Compatibility
+Tested in "Wrath of the Lich King Classic", "Divinity: Original Sin 2 - Definitive Edition"
