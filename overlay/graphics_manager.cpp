@@ -34,7 +34,7 @@ bool GraphicsManager::Initialize(IDXGISwapChain *swap_chain) {
   }
   m_device->GetImmediateContext(&m_device_context);
 
-  // NOTE(Vlad): Initialize copy texture
+  // Initialize copy texture
   D3D11_TEXTURE2D_DESC texture_desc = {};
   texture_desc.Width = swap_chain_desc.BufferDesc.Width;
   texture_desc.Height = swap_chain_desc.BufferDesc.Height;
@@ -51,15 +51,17 @@ bool GraphicsManager::Initialize(IDXGISwapChain *swap_chain) {
     return false;
   }
 
+  // Initialize window hooks
   m_window_manager.Initialize(swap_chain_desc.OutputWindow);
-
   if (!m_window_manager.Hook()) {
     Log(Log_Error, "Failed to hook window functions");
     return false;
   }
 
+  // Initialize video recorder
   m_video_manager.Initialize();
 
+  // Initilize ImGUI
   ImGuiInitializeWin32(swap_chain_desc.OutputWindow);
   ImGuiInitializeGraphics(m_device, m_device_context);
 
@@ -109,11 +111,11 @@ HRESULT WINAPI GraphicsManager::PresentHook(IDXGISwapChain *swap_chain, UINT syn
     if (FAILED(success)) {
       Log(Log_Error, "Failed to get back buffer, error = %x", success);
     } else {
-      D3D11_TEXTURE2D_DESC texture_desc;
-      back_buffer->GetDesc(&texture_desc);
+      D3D11_TEXTURE2D_DESC back_buffer_desc;
+      back_buffer->GetDesc(&back_buffer_desc);
 
-      if (texture_desc.SampleDesc.Count > 1) {
-        m_device_context->ResolveSubresource(m_copy_texture, 0, back_buffer, 0, texture_desc.Format);
+      if (back_buffer_desc.SampleDesc.Count > 1) {
+        m_device_context->ResolveSubresource(m_copy_texture, 0, back_buffer, 0, back_buffer_desc.Format);
       } else {
         m_device_context->CopyResource(m_copy_texture, back_buffer);
       }
@@ -126,18 +128,21 @@ HRESULT WINAPI GraphicsManager::PresentHook(IDXGISwapChain *swap_chain, UINT syn
       }
 
       if (GetState(State_Screenshot)) {
-        int width = texture_desc.Width;
-        int height = texture_desc.Height;
+        int width = back_buffer_desc.Width;
+        int height = back_buffer_desc.Height;
         int stride = mapped_subresource.RowPitch;
-        unsigned int size = texture_desc.Height * mapped_subresource.RowPitch;
+        unsigned int size = back_buffer_desc.Height * mapped_subresource.RowPitch;
 
         void *pixels = malloc(size);
         memcpy(pixels, mapped_subresource.pData, size);
 
+        Log(Log_Info, "Back buffer format (Search DXGI_FORMAT) - %d", back_buffer_desc.Format);
+
         std::thread([width, height, pixels, stride]() {
           // WARNING: Potential memory leak when stbi_write_png throws assert. Need to overwrite stbi asserts
+          // WARNING: Doesn't support all formats of DXGI, so need to use DirectxTex library again to save texture ...
           // Most games is RGBA so we use 4 here
-          if (!stbi_write_png("screenshot.png", width, height, 4, pixels, stride)) {
+          if (!stbi_write_png(Global_ScreenshotFilename, width, height, 4, pixels, stride)) {
             Log(Log_Error, "Failed to save screenshot");
           }
 
@@ -148,7 +153,9 @@ HRESULT WINAPI GraphicsManager::PresentHook(IDXGISwapChain *swap_chain, UINT syn
       }
 
       if (GetState(State_StartRecording)) {
-        m_video_manager.StartRecording(texture_desc.Width, texture_desc.Height);
+        m_video_manager.StartRecording(back_buffer_desc.Format, back_buffer_desc.Width, back_buffer_desc.Height);
+
+        Log(Log_Info, "Back buffer format (Search DXGI_FORMAT) - %d", back_buffer_desc.Format);
 
         RemoveState(State_StartRecording);
         SetState(State_Recording);

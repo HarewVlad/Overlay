@@ -37,6 +37,9 @@ bool Overlay::Initialize(HINSTANCE instance) {
     }
   }
 
+  DestroyWindow(temp_window);
+  UnregisterClass(window_class_name, instance);
+
   return true;
 }
 

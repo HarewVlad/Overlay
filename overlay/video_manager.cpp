@@ -3,10 +3,10 @@ int RoundDown2(int value) {
 }
 
 bool VideoManager::Initialize() {
-  av_register_all();
-  avcodec_register_all();
+  // av_register_all();
+  // avcodec_register_all();
 
-  m_output_format = av_guess_format(nullptr, m_filename, nullptr);
+  m_output_format = av_guess_format(nullptr, Global_VideoFilename, nullptr);
   if (!m_output_format) {
     Log(Log_Error, "Failed to guess format");
     return false;
@@ -15,8 +15,8 @@ bool VideoManager::Initialize() {
   return true;
 }
 
-bool VideoManager::StartRecording(int width, int height) {
-  int result = avformat_alloc_output_context2(&m_output_format_context, m_output_format, nullptr, m_filename);
+bool VideoManager::StartRecording(DXGI_FORMAT format, int width, int height) {
+  int result = avformat_alloc_output_context2(&m_output_format_context, m_output_format, nullptr, Global_VideoFilename);
   if (result) {
     Log(Log_Error, "Failed to allocate output context, error = %x", result);
     return false;
@@ -51,7 +51,7 @@ bool VideoManager::StartRecording(int width, int height) {
   m_codec_context->time_base.den = 1;
   m_codec_context->max_b_frames = 2;
   m_codec_context->gop_size = 10;
-  m_codec_context->framerate.num = 60;
+  m_codec_context->framerate.num = Global_VideoFPS;
   m_codec_context->framerate.den = 1;
 
   if (stream->codecpar->codec_id == AV_CODEC_ID_H264) {
@@ -86,15 +86,19 @@ bool VideoManager::StartRecording(int width, int height) {
     return false;
   }
 
+  // Convert to av format
+  AVPixelFormat av_format = DXGIFormatToAVFormat(format);
+
+  // Should be AV_PIX_FMT_RGBA, testing for WOW
   m_sws_context = sws_getContext(m_codec_context->width, m_codec_context->height, 
-    AV_PIX_FMT_RGBA, m_codec_context->width, m_codec_context->height, AV_PIX_FMT_YUV420P, SWS_BICUBIC, 0, 0, 0);
+    av_format, m_codec_context->width, m_codec_context->height, AV_PIX_FMT_YUV420P, SWS_BICUBIC, 0, 0, 0);
   if (!m_sws_context) {
     Log(Log_Error, "Failed to create sws context");
     return false;
   }
 
   if (!(m_output_format->flags & AVFMT_NOFILE)) {
-    result = avio_open(&m_output_format_context->pb, m_filename, AVIO_FLAG_WRITE);
+    result = avio_open(&m_output_format_context->pb, Global_VideoFilename, AVIO_FLAG_WRITE);
     if (result < 0) {
       Log(Log_Error, "Failed to initialize output context, error = %x", result);
       return false;
@@ -107,7 +111,7 @@ bool VideoManager::StartRecording(int width, int height) {
     return false;
   }
 
-  av_dump_format(m_output_format_context, 0, m_filename, 1);
+  av_dump_format(m_output_format_context, 0, Global_VideoFilename, 1);
 
   m_frame_count = 0;
 
@@ -118,7 +122,8 @@ bool VideoManager::RecordFrame(void *data, int stride) {
   int source_linesize[1] = {stride};
   sws_scale(m_sws_context, (const uint8_t *const *)&data, source_linesize, 0, m_codec_context->height,
         m_frame->data, m_frame->linesize);
-  m_frame->pts = (1.0 / 60) * 90000 * (m_frame_count++);
+  m_frame->pts = (1.0 / Global_VideoFPS) * 90000 * (m_frame_count++);
+  // m_frame->pts = m_frame_count++;
 
   int result = avcodec_send_frame(m_codec_context, m_frame);
   if (result < 0) {
@@ -190,4 +195,18 @@ void VideoTest() {
 
   // video.StopRecording();
   // video.Shutdown();
+}
+
+AVPixelFormat VideoManager::DXGIFormatToAVFormat(DXGI_FORMAT format) {
+  switch (format) {
+    case DXGI_FORMAT_B8G8R8A8_UNORM:
+      return AV_PIX_FMT_BGRA;
+    case DXGI_FORMAT_R8G8B8A8_UNORM:
+      return AV_PIX_FMT_RGBA;
+    case DXGI_FORMAT_R10G10B10A2_UNORM:
+      return AV_PIX_FMT_X2RGB10LE;
+    default:
+      Log(Log_Error, "Format %d unsupported", format);
+      return AV_PIX_FMT_NONE;
+  }
 }
