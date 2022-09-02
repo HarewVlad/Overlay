@@ -4,13 +4,13 @@ bool GraphicsManager::CreateRenderTargetView(IDXGISwapChain *swap_chain) {
   ID3D11Texture2D *back_buffer = nullptr;
   HRESULT success = swap_chain->GetBuffer(0, IID_PPV_ARGS(&back_buffer));
   if (FAILED(success)) {
-    Log(Log_Error, "<GetBuffer> failed, error = %x", success);
+    Log(Log_Error, "Failed to get back buffer, error = %x", success);
     return false;
   }
 
   success = m_device->CreateRenderTargetView(back_buffer, NULL, &m_rtv);
   if (FAILED(success)) {
-    Log(Log_Error, "<CreateRenderTargetView> failed, error = %x", success);
+    Log(Log_Error, "Failed to create render target, error = %x", success);
     return false;
   }
 
@@ -20,24 +20,25 @@ bool GraphicsManager::CreateRenderTargetView(IDXGISwapChain *swap_chain) {
 }
 
 bool GraphicsManager::Initialize(IDXGISwapChain *swap_chain) {
-  HRESULT success = swap_chain->GetDesc(&m_swap_chain_desc);
+  DXGI_SWAP_CHAIN_DESC swap_chain_desc;
+  HRESULT success = swap_chain->GetDesc(&swap_chain_desc);
   if (FAILED(success)) {
-    Log(Log_Error, "<GetDesc> failed, error = %x", success);
+    Log(Log_Error, "Failed to get swap chain descriptor, error = %x", success);
     return false;    
   }
 
   swap_chain->GetDevice(IID_PPV_ARGS(&m_device));
   if (!CreateRenderTargetView(swap_chain)) {
-    Log(Log_Error, "<CreateRenderTargetView> failed");
+    Log(Log_Error, "Failed to create render target");
     return false;
   }
   m_device->GetImmediateContext(&m_device_context);
 
   // NOTE(Vlad): Initialize copy texture
   D3D11_TEXTURE2D_DESC texture_desc = {};
-  texture_desc.Width = m_swap_chain_desc.BufferDesc.Width;
-  texture_desc.Height = m_swap_chain_desc.BufferDesc.Height;
-  texture_desc.Format = m_swap_chain_desc.BufferDesc.Format;
+  texture_desc.Width = swap_chain_desc.BufferDesc.Width;
+  texture_desc.Height = swap_chain_desc.BufferDesc.Height;
+  texture_desc.Format = swap_chain_desc.BufferDesc.Format;
   texture_desc.MipLevels = 1;
   texture_desc.ArraySize = 1;
   texture_desc.SampleDesc.Count = 1;
@@ -46,20 +47,20 @@ bool GraphicsManager::Initialize(IDXGISwapChain *swap_chain) {
 
   success = m_device->CreateTexture2D(&texture_desc, nullptr, &m_copy_texture);
   if (FAILED(success)) {
-    Log(Log_Error, "<CreateTexture2D> failed, error = %x", success);
+    Log(Log_Error, "Failed to create staging texture, error = %x", success);
     return false;
   }
 
-  m_window_manager.Initialize(m_swap_chain_desc.OutputWindow);
+  m_window_manager.Initialize(swap_chain_desc.OutputWindow);
 
-  if (!m_window_manager.HookFunctions()) {
+  if (!m_window_manager.Hook()) {
     Log(Log_Error, "Failed to hook window functions");
     return false;
   }
 
   m_video_manager.Initialize();
 
-  ImGuiInitializeWin32(m_swap_chain_desc.OutputWindow);
+  ImGuiInitializeWin32(swap_chain_desc.OutputWindow);
   ImGuiInitializeGraphics(m_device, m_device_context);
 
   return true;
@@ -74,8 +75,12 @@ HRESULT WINAPI GraphicsManager::PresentHook(IDXGISwapChain *swap_chain, UINT syn
                            UINT flags) {
   auto present = (Present)m_Present.m_original;
 
-  // TODO: Hook other swap chain methods to detect reset
   if (GetState(State_Close)) {
+    if (GetState(State_Recording)) {
+      // In case user is still recording something
+      m_video_manager.StopRecording();
+    }
+
     return present(swap_chain, sync_interval, flags);
   }
   
@@ -90,13 +95,6 @@ HRESULT WINAPI GraphicsManager::PresentHook(IDXGISwapChain *swap_chain, UINT syn
     SetState(State_Initialized);
   }
 
-  if (GetState(State_StartRecording)) {
-    m_video_manager.StartRecording(m_swap_chain_desc.BufferDesc.Width, m_swap_chain_desc.BufferDesc.Height);
-
-    RemoveState(State_StartRecording);
-    SetState(State_Recording);
-  }
-
   if (GetState(State_EndRecording)) {
     m_video_manager.StopRecording();
 
@@ -105,14 +103,17 @@ HRESULT WINAPI GraphicsManager::PresentHook(IDXGISwapChain *swap_chain, UINT syn
   }
   
   // TODO: Instread of states, use job system or something like this
-  if (GetState(State_Screenshot) || GetState(State_Recording)) {
+  if (GetState(State_Screenshot) || GetState(State_Recording) || GetState(State_StartRecording)) {
     ID3D11Texture2D *back_buffer = nullptr;
     HRESULT success = swap_chain->GetBuffer(0, IID_PPV_ARGS(&back_buffer));
     if (FAILED(success)) {
-      Log(Log_Error, "<GetBuffer> failed, error = %x", success);
+      Log(Log_Error, "Failed to get back buffer, error = %x", success);
     } else {
-      if (m_swap_chain_desc.SampleDesc.Count > 1) {
-        m_device_context->ResolveSubresource(m_copy_texture, 0, back_buffer, 0, m_swap_chain_desc.BufferDesc.Format);
+      D3D11_TEXTURE2D_DESC texture_desc;
+      back_buffer->GetDesc(&texture_desc);
+
+      if (texture_desc.SampleDesc.Count > 1) {
+        m_device_context->ResolveSubresource(m_copy_texture, 0, back_buffer, 0, texture_desc.Format);
       } else {
         m_device_context->CopyResource(m_copy_texture, back_buffer);
       }
@@ -120,23 +121,24 @@ HRESULT WINAPI GraphicsManager::PresentHook(IDXGISwapChain *swap_chain, UINT syn
       D3D11_MAPPED_SUBRESOURCE mapped_subresource;
       success = m_device_context->Map(m_copy_texture, 0, D3D11_MAP_READ, 0, &mapped_subresource);
       if (FAILED(success)) {
-        Log(Log_Error, "<Map> failed, error = %x", success);
+        Log(Log_Error, "Failed to map texture, error = %x", success);
         return present(swap_chain, sync_interval, flags);
       }
 
       if (GetState(State_Screenshot)) {
-        int width = m_swap_chain_desc.BufferDesc.Width;
-        int height = m_swap_chain_desc.BufferDesc.Height;
+        int width = texture_desc.Width;
+        int height = texture_desc.Height;
         int stride = mapped_subresource.RowPitch;
-        unsigned int size = m_swap_chain_desc.BufferDesc.Height * mapped_subresource.RowPitch;
+        unsigned int size = texture_desc.Height * mapped_subresource.RowPitch;
 
         void *pixels = malloc(size);
         memcpy(pixels, mapped_subresource.pData, size);
 
         std::thread([width, height, pixels, stride]() {
-          // For now we assume that "comp" is RGBA, can cause issues later
+          // WARNING: Potential memory leak when stbi_write_png throws assert. Need to overwrite stbi asserts
+          // Most games is RGBA so we use 4 here
           if (!stbi_write_png("screenshot.png", width, height, 4, pixels, stride)) {
-            Log(Log_Error, "<stbi_write_png> failed");
+            Log(Log_Error, "Failed to save screenshot");
           }
 
           free(pixels);
@@ -145,9 +147,16 @@ HRESULT WINAPI GraphicsManager::PresentHook(IDXGISwapChain *swap_chain, UINT syn
         RemoveState(State_Screenshot);
       }
 
+      if (GetState(State_StartRecording)) {
+        m_video_manager.StartRecording(texture_desc.Width, texture_desc.Height);
+
+        RemoveState(State_StartRecording);
+        SetState(State_Recording);
+      }
+
       if (GetState(State_Recording)) {
         if (!m_video_manager.RecordFrame(mapped_subresource.pData, mapped_subresource.RowPitch)) {
-          Log(Log_Error, "<RecordFrame> failed");
+          Log(Log_Error, "Failed to record frame");
         }
       }
 
@@ -187,7 +196,6 @@ HRESULT WINAPI GraphicsManager::ResizeBuffersHook(IDXGISwapChain *swap_chain, UI
 
   HRESULT result = resize_buffers(swap_chain, buffer_count, width, height, new_format, swap_chain_flags);
 
-  swap_chain->GetDesc(&m_swap_chain_desc); // TODO: Handle errors?
   CreateRenderTargetView(swap_chain); // TODO: Handle errors?
 
   return result;
@@ -219,7 +227,7 @@ bool GraphicsManager::HookFunctions(HWND window) {
           D3D11_SDK_VERSION, &swap_chain_desc, &swap_chain, &device, nullptr,
           &context);
   if (FAILED(success)) {
-    Log(Log_Error, "<create_swap_chain_and_present> failed, error = %d", success);
+    Log(Log_Error, "Failed to create dummy swap chain, error = %d", success);
     return false;
   }
 
@@ -252,8 +260,7 @@ bool GraphicsManager::HookFunctions(HWND window) {
 void GraphicsManager::Shutdown() {
   m_Present.Disable();
   m_ResizeBuffers.Disable();
-  m_window_manager.UnhookFunctions();
-  m_video_manager.Shutdown();
+  m_window_manager.Unhook();
   
   if (m_device) m_device->Release();
   if (m_rtv) m_rtv->Release();

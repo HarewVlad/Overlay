@@ -8,6 +8,7 @@ bool VideoManager::Initialize() {
 
   m_output_format = av_guess_format(nullptr, m_filename, nullptr);
   if (!m_output_format) {
+    Log(Log_Error, "Failed to guess format");
     return false;
   }
 
@@ -17,21 +18,25 @@ bool VideoManager::Initialize() {
 bool VideoManager::StartRecording(int width, int height) {
   int result = avformat_alloc_output_context2(&m_output_format_context, m_output_format, nullptr, m_filename);
   if (result) {
+    Log(Log_Error, "Failed to allocate output context, error = %x", result);
     return false;
   }
 
   AVCodec *codec = avcodec_find_encoder(m_output_format->video_codec);
   if (!codec) {
+    Log(Log_Error, "Failed to find encoder");
     return false;
   }
 
   AVStream *stream = avformat_new_stream(m_output_format_context, codec);
   if (!stream) {
+    Log(Log_Error, "Failed to create stream");
     return false;
   }
 
   m_codec_context = avcodec_alloc_context3(codec);
   if (!m_codec_context) {
+    Log(Log_Error, "Failed to allocate codec context");
     return false;
   }
 
@@ -61,11 +66,13 @@ bool VideoManager::StartRecording(int width, int height) {
 
   result = avcodec_open2(m_codec_context, codec, NULL);
   if (result < 0) {
+    Log(Log_Error, "Failed to initialize codec, error = %x", result);
     return false;
   }
 
   m_frame = av_frame_alloc();
   if (!m_frame) {
+    Log(Log_Error, "Failed to allocate frame");
     return false;
   }
 
@@ -75,24 +82,28 @@ bool VideoManager::StartRecording(int width, int height) {
 
   result = av_frame_get_buffer(m_frame, 32);
   if (result < 0) {
+    Log(Log_Error, "Failed to allocate frame buffer, error = %x", result);
     return false;
   }
 
   m_sws_context = sws_getContext(m_codec_context->width, m_codec_context->height, 
     AV_PIX_FMT_RGBA, m_codec_context->width, m_codec_context->height, AV_PIX_FMT_YUV420P, SWS_BICUBIC, 0, 0, 0);
   if (!m_sws_context) {
+    Log(Log_Error, "Failed to create sws context");
     return false;
   }
 
   if (!(m_output_format->flags & AVFMT_NOFILE)) {
     result = avio_open(&m_output_format_context->pb, m_filename, AVIO_FLAG_WRITE);
     if (result < 0) {
+      Log(Log_Error, "Failed to initialize output context, error = %x", result);
       return false;
     }
   }
 
   result = avformat_write_header(m_output_format_context, NULL);
   if (result < 0) {
+    Log(Log_Error, "Failed to write header, error = %x", result);
     return false;
   }
 
@@ -111,6 +122,7 @@ bool VideoManager::RecordFrame(void *data, int stride) {
 
   int result = avcodec_send_frame(m_codec_context, m_frame);
   if (result < 0) {
+    Log(Log_Error, "Failed to send frame, error = %x", result);
     return false;
   }
 
@@ -150,6 +162,7 @@ bool VideoManager::StopRecording() {
   if (!(m_output_format_context->flags & AVFMT_NOFILE)) {
     int result = avio_close(m_output_format_context->pb);
     if (result < 0) {
+      Log(Log_Error, "Failed to close output, error = %x", result);
       return false;
     }
   }
@@ -177,11 +190,4 @@ void VideoTest() {
 
   // video.StopRecording();
   // video.Shutdown();
-}
-
-void VideoManager::Shutdown() {
-  av_frame_free(&m_frame);
-  avcodec_free_context(&m_codec_context);
-  avformat_free_context(m_output_format_context);
-  sws_freeContext(m_sws_context);
 }

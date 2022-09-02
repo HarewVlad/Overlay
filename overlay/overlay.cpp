@@ -13,7 +13,7 @@ bool Overlay::Initialize(HINSTANCE instance) {
   wc.lpszClassName = window_class_name;
 
   if (!RegisterClass(&wc)) {
-    Log(Log_Error, "<RegisterClass> failed, error = %d", GetLastError());
+    Log(Log_Error, "Failed to register dummy class, error = %d", GetLastError());
     return false;
   }
 
@@ -23,7 +23,7 @@ bool Overlay::Initialize(HINSTANCE instance) {
                      NULL, NULL, instance, NULL);
 
   if (!temp_window) {
-    Log(Log_Error, "<CreateWindowExA> failed, error = %d", GetLastError());
+    Log(Log_Error, "Failed to create dummy window, error = %d", GetLastError());
     return false;
   }
 
@@ -51,13 +51,9 @@ void RunOverlay(HINSTANCE instance) {
     }
   }
 
-  overlay.Shutdown();
+  overlay.m_graphics_manager.Shutdown();
 
   EjectOverlay();
-}
-
-void Overlay::Shutdown() {
-  m_graphics_manager.Shutdown();
 }
 
 void Eject() {

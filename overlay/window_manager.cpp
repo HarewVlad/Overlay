@@ -13,7 +13,7 @@ LRESULT WINAPI WindowManager::WndProcHook(HWND hwnd, UINT msg, WPARAM wparam, LP
                         lparam);
 }
 
-bool WindowManager::HookFunctions() {
+bool WindowManager::Hook() {
   m_original = (WNDPROC)GetWindowLongPtr(m_window, GWLP_WNDPROC);
   if (!m_original) {
     Log(Log_Error, "<GetWindowLongPtr> failed, error = %d", GetLastError());
@@ -33,7 +33,7 @@ bool WindowManager::HookFunctions() {
   return true;
 }
 
-bool WindowManager::UnhookFunctions() {
+bool WindowManager::Unhook() {
   Log(Log_Info, "Removing windows hooks ...");
 
   SetLastError(0);

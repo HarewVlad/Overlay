@@ -3,7 +3,6 @@ struct VideoManager {
   bool StartRecording(int width, int height);
   bool RecordFrame(void *data, int stride);
   bool StopRecording();
-  void Shutdown();
 
   AVFrame *m_frame;
   AVCodecContext *m_codec_context;
